@@ -15,7 +15,8 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
-          mkdir -p app
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/java/com/rians/jajancrush
       - name: Create Files
         run: |
           printf 'include ":app"\n' > settings.gradle
@@ -36,13 +37,14 @@ jobs:
               applicationId 'com.rians.jajancrush'
               minSdk 21
               targetSdk 34
-              versionCode 31
-              versionName '31.0'
+              versionCode 32
+              versionName '32.0'
             }
           }
           EOF
-          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml 2>/dev/null || mkdir -p app/src/main && echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-          mkdir -p app/src/main/java/com/rians/jajancrush
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          EOF
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
           import android.app.Activity; import android.os.Bundle; import android.content.Context; import android.graphics.*; import android.view.*; import java.util.*;
@@ -89,5 +91,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-TERANG-31
+          name: Jajan-Crush-TERANG-32
           path: app/build/outputs/apk/debug/*.apk
