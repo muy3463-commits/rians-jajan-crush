@@ -28,36 +28,14 @@ jobs:
       - name: Create settings
         run: |
           cat > settings.gradle << 'EOF'
-          pluginManagement {
-            repositories {
-              google()
-              mavenCentral()
-              gradlePluginPortal()
-            }
-          }
-          dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-              google()
-              mavenCentral()
-            }
-          }
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) repositories { google(); mavenCentral() } }
           include ":app"
           EOF
           echo ' ' > build.gradle
           cat > app/build.gradle << 'EOF'
           plugins { id 'com.android.application' version '8.1.0' }
-          android {
-            namespace 'com.rians.jajancrush'
-            compileSdk 34
-            defaultConfig {
-              applicationId 'com.rians.jajancrush'
-              minSdk 21
-              targetSdk 34
-              versionCode 26
-              versionName '26.0'
-            }
-          }
+          android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 27 versionName '27.0' } }
           EOF
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           mkdir -p app/src/main/java/com/rians/jajancrush
@@ -68,7 +46,7 @@ jobs:
           protected void onCreate(Bundle b){ super.onCreate(b); setContentView(new GameView(this)); }
           class GameView extends View {
           int ROWS=5, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=0, moves=21; Random rnd=new Random();
-          int cell, boardX, boardY, boardSize; float downX, downY; Paint paint, textPaint; Bitmap[] jajanBmp=new Bitmap[4]; Bitmap bgBitmap;
+          int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Paint paint, textPaint; Bitmap[] jajanBmp=new Bitmap[4]; Bitmap bgBitmap;
           Bitmap priaN, priaM, priaK, wanitaN, wanitaM, wanitaK; RectF[] tileRects=new RectF[25]; int emo=0; long emoTime=0;
           public GameView(Context c){ super(c); paint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true);
           try{ int id=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(id!=0){ Bitmap tmp=BitmapFactory.decodeResource(getResources(), id); bgBitmap=Bitmap.createBitmap(tmp,0,0,tmp.getWidth(),(int)(tmp.getHeight()*0.55)); }
@@ -76,16 +54,18 @@ jobs:
           Bitmap load(String n){ try{ int id=getResources().getIdentifier(n,"drawable",getPackageName()); if(id==0) return null; Bitmap src=BitmapFactory.decodeResource(getResources(), id); Bitmap out=src.copy(Bitmap.Config.ARGB_8888,true); int w=out.getWidth(), h=out.getHeight(); for(int y=0;y<h;y++){ for(int x=0;x<w;x++){ int col=out.getPixel(x,y); int r=Color.red(col); int g=Color.green(col); int b=Color.blue(col); if(r>235&&g>235&&b>235){ out.setPixel(x,y,Color.TRANSPARENT); } } } return out; }catch(Exception e){ return null; } }
           void setEmo(int e){ emo=e; emoTime=System.currentTimeMillis(); } void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; int tr=0; do{ t=rnd.nextInt(4); grid[r][cc]=t; tr++; }while(isMatch(r,cc)&&tr<20); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
-          void createBmps(int size){ if(jajanBmp[0]!=null) return; int s=size-10; for(int i=0;i<4;i++){ jajanBmp[i]=Bitmap.createBitmap(s,s,Bitmap.Config.ARGB_8888); Canvas cv=new Canvas(jajanBmp[i]); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+          void createBmps(int size){ if(size<=0) return; if(jajanBmp[0]!=null) return; int s=size-10; if(s<=0) s=40; for(int i=0;i<4;i++){ jajanBmp[i]=Bitmap.createBitmap(s,s,Bitmap.Config.ARGB_8888); Canvas cv=new Canvas(jajanBmp[i]); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
           if(i==0){ p.setColor(Color.parseColor("#4CAF50")); cv.drawCircle(s/2f,s/2f,s/2.2f,p); } else if(i==1){ p.setColor(Color.parseColor("#5D4037")); cv.drawRoundRect(new RectF(4,4,s-4,s-4),8,8,p); } else if(i==2){ p.setColor(Color.parseColor("#FBC02D")); cv.drawCircle(s/2f,s/2f,s/2.2f,p); } else { p.setColor(Color.parseColor("#D32F2F")); cv.drawRoundRect(new RectF(2,2,s-2,s-2),16,16,p); } } }
-          protected void onSizeChanged(int w,int h,int ow,int oh){ boardSize=(int)(Math.min(w*0.86, h*0.55)); cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=125; createBmps(cell); for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; tileRects[idx]=new RectF(boardX+c*cell+4, boardY+r*cell+4, boardX+(c+1)*cell-4, boardY+(r+1)*cell-4); } }
-          protected void onDraw(Canvas canvas){ canvas.drawColor(Color.parseColor("#3E2723")); if(bgBitmap!=null){ canvas.drawBitmap(bgBitmap, null, new Rect(0,0,getWidth(), getHeight()), null); Paint dim=new Paint(); dim.setColor(Color.BLACK); dim.setAlpha(55); canvas.drawRect(0,0,getWidth(),getHeight(),dim); }
+          void ensureBoard(){ if(boardSize>0 && cell>0 && tileRects[0]!=null) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(Math.min(w*0.86, h*0.55)); if(boardSize<200) boardSize=200; cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=125; createBmps(cell); for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; tileRects[idx]=new RectF(boardX+c*cell+4, boardY+r*cell+4, boardX+(c+1)*cell-4, boardY+(r+1)*cell-4); } }
+          protected void onSizeChanged(int w,int h,int ow,int oh){ ensureBoard(); }
+          protected void onDraw(Canvas canvas){ ensureBoard(); canvas.drawColor(Color.parseColor("#3E2723")); if(bgBitmap!=null && getWidth()>0){ canvas.drawBitmap(bgBitmap, null, new Rect(0,0,getWidth(), getHeight()), null); Paint dim=new Paint(); dim.setColor(Color.BLACK); dim.setAlpha(55); canvas.drawRect(0,0,getWidth(),getHeight(),dim); }
+          if(boardSize==0){ textPaint.setTextSize(20); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Loading...", getWidth()/2f, getHeight()/2f, textPaint); return; }
           Paint wood=new Paint(); wood.setColor(Color.parseColor("#4E342E")); wood.setAlpha(235); RectF topRect=new RectF(8,8,getWidth()-8, 108); canvas.drawRoundRect(topRect, 14,14, wood); Paint border=new Paint(); border.setColor(Color.parseColor("#D7A76F")); border.setStyle(Paint.Style.STROKE); border.setStrokeWidth(3); canvas.drawRoundRect(topRect,14,14,border);
           textPaint.setTextSize(20); textPaint.setColor(Color.parseColor("#FFD54F")); textPaint.setShadowLayer(3,2,2,Color.BLACK); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Rians Jajan Crush", getWidth()/2f, 34, textPaint);
           textPaint.setTextSize(12); textPaint.setColor(Color.WHITE); textPaint.setShadowLayer(0,0,0,0); int bw=(getWidth()-36)/3; Paint box=new Paint(); box.setColor(Color.parseColor("#3E2723")); Paint boxStroke=new Paint(); boxStroke.setColor(Color.parseColor("#D7A76F")); boxStroke.setStyle(Paint.Style.STROKE); boxStroke.setStrokeWidth(2);
           for(int i=0;i<3;i++){ RectF r=new RectF(12+i*(bw+6), 46, 12+i*(bw+6)+bw, 94); canvas.drawRoundRect(r,8,8,box); canvas.drawRoundRect(r,8,8,boxStroke); String txt=i==0?"Level 1": i==1?"Score "+score:"Moves "+moves; canvas.drawText(txt, r.centerX(), r.centerY()+4, textPaint); }
           Paint boardBg=new Paint(); boardBg.setColor(Color.parseColor("#8D6E63")); boardBg.setAlpha(230); RectF boardFrame=new RectF(boardX-7, boardY-7, boardX+boardSize+7, boardY+boardSize+7); canvas.drawRoundRect(boardFrame, 14,14, boardBg); canvas.drawRoundRect(boardFrame,14,14,border);
-          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; Paint tileP=new Paint(); tileP.setColor(Color.parseColor("#FFF8E1")); canvas.drawRoundRect(tileRects[idx], 9,9, tileP); if(grid[r][c]!=-1 && jajanBmp[grid[r][c]]!=null) canvas.drawBitmap(jajanBmp[grid[r][c]], boardX+c*cell+5, boardY+r*cell+5, null); }
+          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; if(tileRects[idx]==null) continue; Paint tileP=new Paint(); tileP.setColor(Color.parseColor("#FFF8E1")); canvas.drawRoundRect(tileRects[idx], 9,9, tileP); if(grid[r][c]!=-1 && jajanBmp[grid[r][c]]!=null) canvas.drawBitmap(jajanBmp[grid[r][c]], boardX+c*cell+5, boardY+r*cell+5, null); }
           long now=System.currentTimeMillis(); float elapsed=(now-emoTime)/1000f; float scale=1f; Bitmap curP=priaN, curW=wanitaN; if(emo==1){ curP=priaM!=null? priaM:priaN; curW=wanitaM!=null? wanitaM:wanitaN; if(elapsed<1.3f){ scale=1f + (float)Math.sin(elapsed*10)*0.15f; postDelayed(new Runnable(){ public void run(){ invalidate(); }}, 16); } else { emo=0; } } else if(emo==2){ curP=priaK!=null? priaK:priaN; curW=wanitaK!=null? wanitaK:wanitaN; }
           int charW=(int)(getWidth()*0.28); int charH=(int)(charW*1.9); if(curP!=null){ int left=2; int top=boardY+boardSize+6; int right=left+(int)(charW*scale); int bottom=top+(int)(charH*scale); canvas.drawBitmap(curP, null, new Rect(left, top, right, bottom), null); }
           if(curW!=null){ int right=getWidth()-2; int left=right-(int)(charW*scale); int top=boardY+boardSize+6; int bottom=top+(int)(charH*scale); canvas.drawBitmap(curW, null, new Rect(left, top, right, bottom), null); }
@@ -102,5 +82,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-GERAK-FIX3
+          name: Jajan-Crush-FIX-GELAP
           path: app/build/outputs/apk/debug/*.apk
