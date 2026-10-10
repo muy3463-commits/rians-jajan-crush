@@ -15,22 +15,48 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
-      - name: Create Android Project
+          chmod +x gradle-8.0/bin/gradle
+      - name: Create Project
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
-          echo 'include ":app"' > settings.gradle
-          echo 'plugins { id "com.android.application" version "8.1.0" apply false }' > build.gradle
-          printf 'plugins {\n id "com.android.application"\n}\nandroid {\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"\n minSdk 21\n targetSdk 34\n versionCode 1\n versionName "1.0" }\n}\n' > app/build.gradle
+          cat > settings.gradle << 'EOF'
+          pluginManagement {
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
+          }
+          include ':app'
+          EOF
+          cat > build.gradle << 'EOF'
+          allprojects {
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
+          EOF
+          cat > app/build.gradle << 'EOF'
+          plugins {
+            id 'com.android.application' version '8.1.0'
+          }
+          android {
+            compileSdk 34
+            defaultConfig {
+              applicationId "com.rians.jajancrush"
+              minSdk 21
+              targetSdk 34
+              versionCode 1
+              versionName "1.0"
+            }
+          }
+          EOF
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Rians Jajan Crush"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           echo 'package com.rians.jajancrush;' > app/src/main/java/com/rians/jajancrush/MainActivity.java
-          echo 'import android.app.Activity;' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
-          echo 'import android.os.Bundle;' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
-          echo 'import android.widget.TextView;' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
-          echo 'public class MainActivity extends Activity{' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
-          echo 'protected void onCreate(Bundle b){super.onCreate(b);TextView tv=new TextView(this);tv.setText("Rians Jajan Crush OK!");setContentView(tv);}}' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
+          echo 'import android.app.Activity;import android.os.Bundle;import android.widget.TextView;public class MainActivity extends Activity{protected void onCreate(Bundle b){super.onCreate(b);TextView tv=new TextView(this);tv.setText("Rians Jajan Crush OK!");tv.setTextSize(30);setContentView(tv);}}' >> app/src/main/java/com/rians/jajancrush/MainActivity.java
       - name: Build APK
-        run: |
-         ./gradle-8.0/bin/gradle assembleDebug --no-daemon
+        run:./gradle-8.0/bin/gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
