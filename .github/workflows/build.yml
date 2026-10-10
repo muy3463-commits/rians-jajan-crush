@@ -10,75 +10,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: android-actions/setup-android@v3
-
-      - name: Build Simple APK
+      - name: Generate Project
         run: |
-          rm -rf app
-          mkdir -p app/src/main/java/com/rian/jajancrush
-          mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/layout
-          cp *.png app/src/main/res/drawable/ 2>/dev/null || true
-          echo "include ':app'" > settings.gradle
-          echo "buildscript{repositories{google();mavenCentral()}dependencies{classpath 'com.android.tools.build:gradle:8.2.2'}}allprojects{repositories{google();mavenCentral()}}" > build.gradle
-          cat > app/build.gradle << 'EOF'
-          plugins { id 'com.android.application' }
-          android {
-            namespace 'com.rian.jajancrush'
-            compileSdk 34
-            defaultConfig { applicationId "com.rian.jajancrush"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }
-            buildTypes { release { minifyEnabled false } }
-          }
-          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
-          EOF
-          cat > app/src/main/AndroidManifest.xml << 'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:allowBackup="true" android:label="Rian Jajan Crush" android:theme="@android:style/Theme.NoTitleBar">
-              <activity android:name=".MainActivity" android:exported="true">
-                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
-              </activity>
-            </application>
-          </manifest>
-          EOF
-          cat > app/src/main/java/com/rian/jajancrush/MainActivity.java << 'EOF'
-          package com.rian.jajancrush;
-          import android.os.Bundle;
-          import android.widget.*;
-          import android.view.Gravity;
-          import androidx.appcompat.app.AppCompatActivity;
-          public class MainActivity extends AppCompatActivity {
-            int score=0; int state=0;
-            ImageView leftImg, rightImg, bg;
-            TextView scoreTxt, leftTxt, rightTxt;
-            @Override protected void onCreate(Bundle b){
-              super.onCreate(b);
-              LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(0xFF8D6E63);
-              LinearLayout top = new LinearLayout(this); top.setOrientation(LinearLayout.HORIZONTAL); top.setBackgroundColor(0xFF4E342E); top.setPadding(20,20,20,20);
-              TextView title = new TextView(this); title.setText("Rian's Jajan Crush"); title.setTextColor(0xFFFFFFFF); title.setTextSize(18);
-              scoreTxt = new TextView(this); scoreTxt.setText("Score: 0"); scoreTxt.setTextColor(0xFFFFFF00); scoreTxt.setTextSize(18);
-              top.addView(title); top.addView(scoreTxt); ((LinearLayout.LayoutParams)scoreTxt.getLayoutParams()).leftMargin=40;
-              LinearLayout mid = new LinearLayout(this); mid.setOrientation(LinearLayout.HORIZONTAL); mid.setGravity(Gravity.CENTER); mid.setPadding(10,20,10,20);
-              LinearLayout col1 = new LinearLayout(this); col1.setOrientation(LinearLayout.VERTICAL); col1.setGravity(Gravity.CENTER);
-              leftImg = new ImageView(this); leftImg.setImageResource(R.drawable.pria_kiri); leftImg.getLayoutParams(); leftImg.setAdjustViewBounds(true); leftImg.setMaxWidth(300);
-              leftTxt = new TextView(this); leftTxt.setText("Rian"); leftTxt.setTextColor(-1); leftTxt.setGravity(Gravity.CENTER);
-              col1.addView(leftImg); col1.addView(leftTxt);
-              LinearLayout col2 = new LinearLayout(this); col2.setOrientation(LinearLayout.VERTICAL); col2.setGravity(Gravity.CENTER); col2.setBackgroundColor(0xE6FFFFFF); col2.setPadding(10,10,10,10);
-              GridLayout grid = new GridLayout(this); grid.setColumnCount(4);
-              for(int i=0;i<16;i++){ Button btn=new Button(this); btn.setText(new String[]{"🟢","🌶️","🍡","🟡"}[i%4]); btn.setOnClickListener(v->{ if(Math.random()>0.4){score+=10; state=1; leftImg.setImageResource(R.drawable.pria_kiri_pasmenang); rightImg.setImageResource(R.drawable.wanita_kanan_pasmenang); leftTxt.setText("Mantap!"); rightTxt.setText("Yay!");}else{score=Math.max(0,score-5); state=2; leftImg.setImageResource(R.drawable.pria_kiri_paskalah); rightImg.setImageResource(R.drawable.wanita_kanan_paskalah); leftTxt.setText("Aduh!"); rightTxt.setText("Hmm!");} scoreTxt.setText("Score: "+score); v.postDelayed(()->{leftImg.setImageResource(R.drawable.pria_kiri); rightImg.setImageResource(R.drawable.wanita_kanan); leftTxt.setText("Rian"); rightTxt.setText("Ayang");},1500);}); grid.addView(btn); }
-              col2.addView(grid);
-              LinearLayout col3 = new LinearLayout(this); col3.setOrientation(LinearLayout.VERTICAL); col3.setGravity(Gravity.CENTER);
-              rightImg = new ImageView(this); rightImg.setImageResource(R.drawable.wanita_kanan); rightImg.setAdjustViewBounds(true); rightImg.setMaxWidth(300);
-              rightTxt = new TextView(this); rightTxt.setText("Ayang"); rightTxt.setTextColor(-1); rightTxt.setGravity(Gravity.CENTER);
-              col3.addView(rightImg); col3.addView(rightTxt);
-              mid.addView(col1); mid.addView(col2); mid.addView(col3);
-              root.addView(top); root.addView(mid);
-              setContentView(root);
-            }
-          }
-          EOF
-          gradle :app:assembleDebug --stacktrace
-
+          python3 << 'PY'
+          import os, pathlib, shutil
+          os.makedirs("app/src/main/java/com/rian/jajancrush", exist_ok=True)
+          os.makedirs("app/src/main/res/drawable", exist_ok=True)
+          for f in pathlib.Path(".").glob("*.png"):
+              shutil.copy(f, f"app/src/main/res/drawable/{f.name.lower()}")
+          open("settings.gradle","w").write("include ':app'")
+          open("build.gradle","w").write("buildscript{repositories{google();mavenCentral()}dependencies{classpath 'com.android.tools.build:gradle:8.1.4'}}allprojects{repositories{google();mavenCentral()}}")
+          open("app/build.gradle","w").write("plugins { id 'com.android.application' }\nandroid { namespace 'com.rian.jajancrush'\n compileSdk 33\n defaultConfig { applicationId \"com.rian.jajancrush\"; minSdk 24; targetSdk 33; versionCode 1; versionName \"1.0\" }\n buildTypes { release { minifyEnabled false } } }\ndependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }")
+          open("app/src/main/AndroidManifest.xml","w").write('<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:allowBackup="true" android:label="Jajan Crush" android:theme="@android:style/Theme.Light.NoTitleBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>')
+          open("app/src/main/java/com/rian/jajancrush/MainActivity.java","w").write('package com.rian.jajancrush; import android.os.Bundle; import android.widget.*; import android.view.Gravity; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { int score=0; ImageView left,right; TextView scoreT,infoL,infoR; protected void onCreate(Bundle b){ super.onCreate(b); LinearLayout root=new LinearLayout(this); root.setOrientation(1); root.setBackgroundColor(0xFF8D6E63); root.setPadding(10,10,10,10); LinearLayout top=new LinearLayout(this); top.setOrientation(0); top.setBackgroundColor(0xFF4E342E); top.setPadding(20,20,20,20); TextView title=new TextView(this); title.setText("Rian Jajan Crush"); title.setTextColor(-1); title.setTextSize(16); scoreT=new TextView(this); scoreT.setText("Score: 0"); scoreT.setTextColor(0xFFFFFF00); scoreT.setTextSize(16); scoreT.setPadding(30,0,0,0); top.addView(title); top.addView(scoreT); LinearLayout mid=new LinearLayout(this); mid.setOrientation(0); mid.setGravity(Gravity.CENTER_VERTICAL); mid.setPadding(0,20,0,0); LinearLayout c1=new LinearLayout(this); c1.setOrientation(1); c1.setGravity(17); c1.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1)); left=new ImageView(this); left.setAdjustViewBounds(true); try{ left.setImageResource(getResources().getIdentifier("pria_kiri","drawable",getPackageName())); }catch(Exception e){} infoL=new TextView(this); infoL.setText("Rian"); infoL.setTextColor(-1); infoL.setGravity(17); infoL.setPadding(0,10,0,0); c1.addView(left); c1.addView(infoL); LinearLayout c2=new LinearLayout(this); c2.setOrientation(1); c2.setGravity(17); c2.setBackgroundColor(0xE6FFFFFF); c2.setPadding(10,10,10,10); c2.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1.3f)); GridLayout grid=new GridLayout(this); grid.setColumnCount(4); for(int i=0;i<16;i++){ Button btn=new Button(this); btn.setText(new String[]{"\\uD83D\\uDFE2","\\uD83C\\uDF36","\\uD83C\\uDF61","\\uD83D\\uDFE1"}[i%4]); LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(110,110); lp.setMargins(4,4,4,4); btn.setLayoutParams(lp); btn.setOnClickListener(v->{ boolean menang = Math.random()>0.4; if(menang){ score+=10; try{left.setImageResource(getResources().getIdentifier("pria_kiri_pasmenang","drawable",getPackageName())); right.setImageResource(getResources().getIdentifier("wanita_kanan_pasmenang","drawable",getPackageName()));}catch(Exception ex){} infoL.setText("Mantap!"); infoR.setText("Yay!");} else{ score=Math.max(0,score-5); try{left.setImageResource(getResources().getIdentifier("pria_kiri_paskalah","drawable",getPackageName())); right.setImageResource(getResources().getIdentifier("wanita_kanan_paskalah","drawable",getPackageName()));}catch(Exception ex){} infoL.setText("Aduh!"); infoR.setText("Hmm!");} scoreT.setText("Score: "+score); v.postDelayed(()->{ try{left.setImageResource(getResources().getIdentifier("pria_kiri","drawable",getPackageName())); right.setImageResource(getResources().getIdentifier("wanita_kanan","drawable",getPackageName()));}catch(Exception ex){} infoL.setText("Rian"); infoR.setText("Ayang"); },1500); }); grid.addView(btn); } TextView tap=new TextView(this); tap.setText("Tap Jajan!"); tap.setGravity(17); tap.setPadding(0,10,0,0); c2.addView(grid); c2.addView(tap); LinearLayout c3=new LinearLayout(this); c3.setOrientation(1); c3.setGravity(17); c3.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1)); right=new ImageView(this); right.setAdjustViewBounds(true); try{ right.setImageResource(getResources().getIdentifier("wanita_kanan","drawable",getPackageName())); }catch(Exception e){} infoR=new TextView(this); infoR.setText("Ayang"); infoR.setTextColor(-1); infoR.setGravity(17); infoR.setPadding(0,10,0,0); c3.addView(right); c3.addView(infoR); mid.addView(c1); mid.addView(c2); mid.addView(c3); root.addView(top); root.addView(mid); setContentView(root); } }')
+          print("Generated OK")
+          PY
+      - name: Build APK
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
+          unzip -q gradle-8.0-bin.zip
+         ./gradle-8.0/bin/gradle :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: APK-Rian-Jajan-Final
+          name: Rian-Jajan-Crush-APK
           path: app/build/outputs/apk/debug/*.apk
