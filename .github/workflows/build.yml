@@ -25,17 +25,42 @@ jobs:
           cp wanita_kanan.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
-      - name: Create Files
+      - name: Create settings
         run: |
-          mkdir -p app/src/main/java/com/rians/jajancrush
-          printf 'include ":app"\n' > settings.gradle
+          cat > settings.gradle << 'EOF'
+          pluginManagement {
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
+          include ":app"
+          EOF
           echo ' ' > build.gradle
-          cat > app/build.gradle << 'GRADLE'
-          buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.1.0' } }
-          apply plugin: 'com.android.application'
-          android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 25 versionName '25.0' } }
-          GRADLE
+          cat > app/build.gradle << 'EOF'
+          plugins { id 'com.android.application' version '8.1.0' }
+          android {
+            namespace 'com.rians.jajancrush'
+            compileSdk 34
+            defaultConfig {
+              applicationId 'com.rians.jajancrush'
+              minSdk 21
+              targetSdk 34
+              versionCode 26
+              versionName '26.0'
+            }
+          }
+          EOF
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          mkdir -p app/src/main/java/com/rians/jajancrush
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
           import android.app.Activity; import android.os.Bundle; import android.content.Context; import android.graphics.*; import android.view.*; import java.util.*;
@@ -77,5 +102,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-GERAK-FIX2
+          name: Jajan-Crush-GERAK-FIX3
           path: app/build/outputs/apk/debug/*.apk
