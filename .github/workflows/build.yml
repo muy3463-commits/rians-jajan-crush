@@ -26,25 +26,55 @@ jobs:
           cp wanita_kanan.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
+          ls -lh app/src/main/res/drawable/ | tail -10
       - name: Create Files
         run: |
           printf 'include ":app"\n' > settings.gradle
-          cat > build.gradle << 'EOF'
+
+          cat > build.gradle << 'ROOT'
           buildscript {
-            repositories { google(); mavenCentral(); gradlePluginPortal() }
-            dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
+            dependencies {
+              classpath 'com.android.tools.build:gradle:8.1.0'
+            }
           }
-          allprojects { repositories { google(); mavenCentral() } }
-          EOF
-          cat > app/build.gradle << 'EOF'
+          allprojects {
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
+          ROOT
+
+          cat > app/build.gradle << 'APP'
           apply plugin: 'com.android.application'
-          repositories { google(); mavenCentral() }
-          android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 42 versionName '42.0' } }
-          EOF
-          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          repositories {
+            google()
+            mavenCentral()
+          }
+          android {
+            namespace 'com.rians.jajancrush'
+            compileSdk 34
+            compileSdkVersion 34
+            defaultConfig {
+              applicationId 'com.rians.jajancrush'
+              minSdk 21
+              targetSdk 34
+              versionCode 43
+              versionName '43.0'
+            }
+          }
+          APP
+
+          cat > app/src/main/AndroidManifest.xml << 'MANI'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
-          EOF
-          cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
+          MANI
+
+          cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
           import android.app.Activity; import android.os.Bundle; import android.content.Context; import android.graphics.*; import android.view.*; import java.util.*;
           public class MainActivity extends Activity {
@@ -73,11 +103,9 @@ jobs:
           Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG); txt.setColor(Color.parseColor("#FFD54F")); txt.setTextSize(34); txt.setFakeBoldText(true); txt.setTextAlign(Paint.Align.CENTER); txt.setShadowLayer(4,2,2,Color.BLACK); canvas.drawText("Rian's Jajan Crush", getWidth()/2f, 68, txt); txt.clearShadowLayer();
           int pillW=(getWidth()-48)/3; int pillY=88; String[] labs={"Level 1","Score "+score,"Moves "+moves};
           for(int i=0;i<3;i++){ RectF pill=new RectF(14+i*(pillW+8), pillY, 14+i*(pillW+8)+pillW, pillY+50); Paint bg=new Paint(); bg.setColor(Color.parseColor("#3E2723")); canvas.drawRoundRect(pill,28,28,bg); canvas.drawRoundRect(pill,28,28,goldB); txt.setTextSize(13); txt.setColor(Color.WHITE); canvas.drawText(labs[i], pill.centerX(), pill.centerY()+4, txt); }
-          // PAPAN DI TENGAH
           float outer=16; RectF outerR=new RectF(boardX-outer, boardY-outer, boardX+boardSize+outer, boardY+boardSize+outer); Paint outerWood=new Paint(); outerWood.setColor(Color.parseColor("#6D4C41")); canvas.drawRoundRect(outerR,20,20,outerWood); canvas.drawRoundRect(outerR,20,20,goldB);
           RectF innerR=new RectF(boardX-4, boardY-4, boardX+boardSize+4, boardY+boardSize+4); Paint dark=new Paint(); dark.setColor(Color.parseColor("#4E342E")); canvas.drawRoundRect(innerR,12,12,dark);
           for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=boardX+c*cell+4, t=boardY+r*cell+4, rr=boardX+(c+1)*cell-4, b=boardY+(r+1)*cell-4; RectF tile=new RectF(l,t,rr,b); Paint tp=new Paint(); tp.setColor(Color.parseColor("#FBE9C9")); canvas.drawRoundRect(tile,10,10,tp); if(grid[r][c]!=-1) drawJajan3D(canvas, grid[r][c], tile.centerX(), tile.centerY(), cell*0.80f); }
-          // ===== NAPAK TANAH REAL =====
           float elapsed=(now-emoTime)/1000f;
           float idleBreathe=(float)Math.sin(totalSec*2.2)*0.018f + 1f;
           float idleSway=(float)Math.sin(totalSec*0.9)*3.5f;
@@ -99,18 +127,14 @@ jobs:
             emo=0;
             postInvalidateDelayed(32);
           }
-          // TANAH ASLI - kaki bener-bener napak!
           int charH=(int)(getHeight()*0.58f); int charW=(int)(charH*0.44f);
-          int groundY=(int)(getHeight()*0.965f); // 96.5% - bener-bener di bawah!
+          int groundY=(int)(getHeight()*0.965f);
           int baseTop=groundY-charH;
-          // Bayangan kaki REAL - pas napak gede, pas lompat kecil!
           float shadowScale = isHappy? (1f - Math.abs(jumpY)/80f) : 1f;
           if(shadowScale<0.2f) shadowScale=0.2f;
           Paint shadowP=new Paint(); shadowP.setColor(Color.BLACK); shadowP.setAlpha(55);
-          // Bayangan pria - oval di bawah sepatu
           canvas.drawOval(new RectF(15, groundY-4, 15+charW*0.75f*shadowScale, groundY+8), shadowP);
           canvas.drawOval(new RectF(getWidth()-15-charW*0.75f*shadowScale, groundY-4, getWidth()-15, groundY+8), shadowP);
-          // PRIA KIRI - KAKI NAPAK TANAH!
           Bitmap curP=priaN; if(isHappy) curP=priaM!=null?priaM:priaN; else if(isSad) curP=priaK!=null?priaK:priaN;
           if(curP!=null){
             float s = (isHappy?1f+scaleAdd:idleBreathe);
@@ -124,7 +148,6 @@ jobs:
             canvas.drawBitmap(curP, null, new Rect(left,top,right,bottom), null);
             canvas.restore();
           }
-          // WANITA KANAN - KAKI NAPAK TANAH!
           Bitmap curW=wanitaN; if(isHappy) curW=wanitaM!=null?wanitaM:wanitaN; else if(isSad) curW=wanitaK!=null?wanitaK:wanitaN;
           if(curW!=null){
             float s = (isHappy?1f+scaleAdd:idleBreathe);
@@ -146,11 +169,11 @@ jobs:
           void drop(){ for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=rnd.nextInt(4); } }
           }
           }
-          ENDJAVA
+          JAVA
       - name: Build APK
         run: ./gradle-8.0/bin/gradle assembleDebug --no-daemon
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-NAPAK-TANAH-REAL
+          name: Jajan-Crush-NAPAK-TANAH-FIX
           path: app/build/outputs/apk/debug/*.apk
