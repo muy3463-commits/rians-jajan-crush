@@ -19,7 +19,7 @@ jobs:
       - name: Make project
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
-          printf "pluginManagement {\n repositories {\n google()\n mavenCentral()\n gradlePluginPortal()\n }\n}\ninclude ':app'\n" > settings.gradle
+          printf "pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }\ndependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)\n repositories { google(); mavenCentral() } }\ninclude ':app'\n" > settings.gradle
           echo " " > build.gradle
           printf "plugins { id 'com.android.application' version '8.1.0' }\nandroid { namespace 'com.rians.jajancrush'\n compileSdk 34\n defaultConfig { applicationId 'com.rians.jajancrush'\n minSdk 21\n targetSdk 34\n versionCode 1\n versionName '1.0' } }\n" > app/build.gradle
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Rians"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
