@@ -15,6 +15,7 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
+          mkdir -p app
       - name: Create Files
         run: |
           printf 'include ":app"\n' > settings.gradle
@@ -35,12 +36,12 @@ jobs:
               applicationId 'com.rians.jajancrush'
               minSdk 21
               targetSdk 34
-              versionCode 30
-              versionName '30.0'
+              versionCode 31
+              versionName '31.0'
             }
           }
           EOF
-          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml 2>/dev/null || mkdir -p app/src/main && echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           mkdir -p app/src/main/java/com/rians/jajancrush
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
@@ -49,7 +50,7 @@ jobs:
           protected void onCreate(Bundle b){ super.onCreate(b); getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); setContentView(new GameView(this)); }
           class GameView extends View {
           int ROWS=5, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=0, moves=21; Random rnd=new Random();
-          int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Paint paint, textPaint; int emo=0; long emoTime=0; float shake=0;
+          int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Paint paint, textPaint; int emo=0; long emoTime=0;
           public GameView(Context c){ super(c); paint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint=new Paint(Paint.ANTI_ALIAS_FLAG); initGrid(); }
           void setEmo(int e){ emo=e; emoTime=System.currentTimeMillis(); }
           void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; int tr=0; do{ t=rnd.nextInt(4); grid[r][cc]=t; tr++; }while(isMatch(r,cc)&&tr<20); } }
@@ -57,33 +58,24 @@ jobs:
           void ensureBoard(){ if(boardSize>0 && cell>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(Math.min(w*0.88, h*0.58)); if(boardSize<250) boardSize=250; cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=130; }
           protected void onDraw(Canvas canvas){
           ensureBoard();
-          // BACKGROUND PASTI KELIATAN - COKLAT TERANG
           Paint bg=new Paint(); bg.setColor(Color.parseColor("#5D4037")); canvas.drawRect(0,0,getWidth(),getHeight(),bg);
-          // langit
           Paint sky=new Paint(); sky.setColor(Color.parseColor("#8D6E63")); canvas.drawRect(0,0,getWidth(),boardY-10,sky);
           if(boardSize==0){ textPaint.setColor(Color.WHITE); textPaint.setTextSize(30); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Loading Jajan Crush...", getWidth()/2f, getHeight()/2f, textPaint); return; }
-          // HEADER
           Paint wood=new Paint(); wood.setColor(Color.parseColor("#3E2723")); RectF top=new RectF(10,10,getWidth()-10,120); canvas.drawRoundRect(top,16,16,wood);
           Paint border=new Paint(); border.setColor(Color.parseColor("#FFD54F")); border.setStyle(Paint.Style.STROKE); border.setStrokeWidth(4); canvas.drawRoundRect(top,16,16,border);
           textPaint.setColor(Color.parseColor("#FFD54F")); textPaint.setTextSize(28); textPaint.setFakeBoldText(true); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("RIANS JAJAN CRUSH", getWidth()/2f, 48, textPaint);
           textPaint.setTextSize(16); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(false);
           int bw=(getWidth()-50)/3;
           for(int i=0;i<3;i++){ RectF r=new RectF(15+i*(bw+10), 62, 15+i*(bw+10)+bw, 108); Paint bx=new Paint(); bx.setColor(Color.parseColor("#4E342E")); canvas.drawRoundRect(r,10,10,bx); canvas.drawRoundRect(r,10,10,border); String txt=i==0?"LVL 1": i==1?"Score "+score:"Moves "+moves; canvas.drawText(txt, r.centerX(), r.centerY()+6, textPaint); }
-          // BOARD
           Paint boardBg=new Paint(); boardBg.setColor(Color.parseColor("#D7CCC8")); RectF frame=new RectF(boardX-10, boardY-10, boardX+boardSize+10, boardY+boardSize+10); canvas.drawRoundRect(frame,18,18,boardBg); canvas.drawRoundRect(frame,18,18,border);
-          // TILES
           for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ RectF tr=new RectF(boardX+c*cell+5, boardY+r*cell+5, boardX+(c+1)*cell-5, boardY+(r+1)*cell-5); Paint tp=new Paint(Paint.ANTI_ALIAS_FLAG); tp.setColor(Color.WHITE); canvas.drawRoundRect(tr,12,12,tp);
           if(grid[r][c]!=-1){ Paint jp=new Paint(Paint.ANTI_ALIAS_FLAG); int t=grid[r][c]; if(t==0) jp.setColor(Color.parseColor("#4CAF50")); else if(t==1) jp.setColor(Color.parseColor("#795548")); else if(t==2) jp.setColor(Color.parseColor("#FFC107")); else jp.setColor(Color.parseColor("#E91E63"));
           canvas.drawCircle(tr.centerX(), tr.centerY(), cell*0.32f, jp); textPaint.setTextSize(cell*0.4f); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true); String emoTxt=t==0?"O": t==1?"C": t==2?"P":"L"; canvas.drawText(emoTxt, tr.centerX(), tr.centerY()+8, textPaint); } }
-          // CHARACTERS - PASTI KELIATAN, GOYANG
           long now=System.currentTimeMillis(); float elapsed=(now-emoTime)/1000f; float scale=1f, offY=0; if(emo==1 && elapsed<1.2f){ scale=1f + (float)Math.sin(elapsed*14)*0.18f; offY=(float)Math.sin(elapsed*20)*12; postInvalidateDelayed(16); } else if(emo==1 && elapsed>=1.2f) emo=0;
-          // Pria kiri
           int charW=(int)(getWidth()*0.26); int charH=(int)(charW*1.5); int left=10; int topY=boardY+boardSize+15 + (int)offY; Paint cp=new Paint(); cp.setColor(emo==1?Color.parseColor("#4CAF50"): emo==2?Color.parseColor("#616161"):Color.parseColor("#2196F3"));
           RectF priaRect=new RectF(left, topY, left+charW*scale, topY+charH*scale); canvas.drawRoundRect(priaRect, 20,20, cp); textPaint.setColor(Color.WHITE); textPaint.setTextSize(18); canvas.drawText(emo==1?"SENANG!":emo==2?"SEDih":"PRIA", priaRect.centerX(), priaRect.centerY(), textPaint);
-          // Wanita kanan
           int right=getWidth()-10; Paint cw=new Paint(); cw.setColor(emo==1?Color.parseColor("#E91E63"): emo==2?Color.parseColor("#616161"):Color.parseColor("#9C27B0"));
           RectF wanitaRect=new RectF(right-charW*scale, topY, right, topY+charH*scale); canvas.drawRoundRect(wanitaRect,20,20,cw); canvas.drawText(emo==1?"YEAY!":emo==2?"Hiks":"WANITA", wanitaRect.centerX(), wanitaRect.centerY(), textPaint);
-          // Text bawah
           textPaint.setTextSize(18); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true); canvas.drawText(emo==1?"PECAAH!! GOYANG!": emo==2?"KALAH...":"GESER 3 KUE SAMA!", getWidth()/2f, boardY+boardSize+30, textPaint);
           if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180); canvas.drawRect(0,0,getWidth(),getHeight(),over); textPaint.setTextSize(44); textPaint.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f-20, textPaint); textPaint.setTextSize(20); textPaint.setColor(Color.WHITE); canvas.drawText("Tap untuk main lagi", getWidth()/2f, getHeight()/2f+20, textPaint); } }
           public boolean onTouchEvent(MotionEvent e){ if(moves<=0 && e.getAction()==MotionEvent.ACTION_UP){ score=0; moves=21; initGrid(); emo=0; invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; } if(e.getAction()==MotionEvent.ACTION_UP){ float upX=e.getX(), upY=e.getY(); float dx=upX-downX, dy=upY-downY; int c=(int)((downX-boardX)/cell); int r=(int)((downY-boardY)/cell); if(r<0||r>=ROWS||c<0||c>=COLS) return true; int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cell*0.25f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cell*0.25f) nr=r+(dy>0?1:-1); } if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true; int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; if(moves<=0){ setEmo(2); } } invalidate(); return true; } return true; }
@@ -97,5 +89,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-TERANG-100
+          name: Jajan-Crush-TERANG-31
           path: app/build/outputs/apk/debug/*.apk
