@@ -18,19 +18,19 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/mipmap-xxxhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi
           if [ -f icon.png ]; then for D in mipmap-xxxhdpi mipmap-xxhdpi mipmap-xhdpi mipmap-hdpi mipmap-mdpi; do cp icon.png app/src/main/res/$D/ic_launcher.png; cp icon.png app/src/main/res/$D/ic_launcher_round.png; done; fi
-          cp bg_desa.png app/src/main/res/drawable/ || true
-          cp pria_kiri.png app/src/main/res/drawable/ || true
-          cp pria_kiri_pasmenang.png app/src/main/res/drawable/ || true
-          cp pria_kiri_paskalah.png app/src/main/res/drawable/ || true
-          cp wanita_kanan.png app/src/main/res/drawable/ || true
-          cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ || true
-          cp wanita_kanan_paskalah.png app/src/main/res/drawable/ || true
+          cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp pria_kiri.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp pria_kiri_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp pria_kiri_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp wanita_kanan.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp wanita_kanan_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
       - name: Create Files
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
-          echo 'pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } } dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) repositories { google(); mavenCentral() } } include ":app"' > settings.gradle
+          printf 'include ":app"\n' > settings.gradle
           echo ' ' > build.gradle
-          echo "plugins { id 'com.android.application' version '8.1.0' } android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 22 versionName '22.0' } }" > app/build.gradle
+          echo "plugins { id 'com.android.application' version '8.1.0' } android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 23 versionName '23.0' } }" > app/build.gradle
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
@@ -73,5 +73,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-GERAK
+          name: Jajan-Crush-GERAK-FIX
           path: app/build/outputs/apk/debug/*.apk
