@@ -30,7 +30,11 @@ jobs:
           mkdir -p app/src/main/java/com/rians/jajancrush
           printf 'include ":app"\n' > settings.gradle
           echo ' ' > build.gradle
-          echo "plugins { id 'com.android.application' version '8.1.0' } android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 23 versionName '23.0' } }" > app/build.gradle
+          cat > app/build.gradle << 'GRADLE'
+          buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.1.0' } }
+          apply plugin: 'com.android.application'
+          android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 25 versionName '25.0' } }
+          GRADLE
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
@@ -73,5 +77,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-GERAK-FIX
+          name: Jajan-Crush-GERAK-FIX2
           path: app/build/outputs/apk/debug/*.apk
