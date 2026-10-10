@@ -26,45 +26,20 @@ jobs:
           cp wanita_kanan.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
           cp wanita_kanan_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
-          ls -lh app/src/main/res/drawable/
       - name: Create Files
         run: |
           printf 'include ":app"\n' > settings.gradle
           cat > build.gradle << 'EOF'
           buildscript {
-            repositories {
-              google()
-              mavenCentral()
-              gradlePluginPortal()
-            }
-            dependencies {
-              classpath 'com.android.tools.build:gradle:8.1.0'
-            }
+            repositories { google(); mavenCentral(); gradlePluginPortal() }
+            dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
           }
-          allprojects {
-            repositories {
-              google()
-              mavenCentral()
-            }
-          }
+          allprojects { repositories { google(); mavenCentral() } }
           EOF
           cat > app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
-          repositories {
-            google()
-            mavenCentral()
-          }
-          android {
-            namespace 'com.rians.jajancrush'
-            compileSdk 34
-            defaultConfig {
-              applicationId 'com.rians.jajancrush'
-              minSdk 21
-              targetSdk 34
-              versionCode 39
-              versionName '39.0'
-            }
-          }
+          repositories { google(); mavenCentral() }
+          android { namespace 'com.rians.jajancrush' compileSdk 34 defaultConfig { applicationId 'com.rians.jajancrush' minSdk 21 targetSdk 34 versionCode 41 versionName '41.0' } }
           EOF
           cat > app/src/main/AndroidManifest.xml << 'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
@@ -78,42 +53,85 @@ jobs:
           int ROWS=5, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=500, moves=30; Random rnd=new Random();
           int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Bitmap bgBitmap;
           Bitmap priaN, priaM, priaK, wanitaN, wanitaM, wanitaK; int emo=0; long emoTime=0; long startTime=System.currentTimeMillis();
-          public GameView(Context c){ super(c);
-          try{ priaN=loadNoWhite("pria_kiri"); priaM=loadNoWhite("pria_kiri_pasmenang"); priaK=loadNoWhite("pria_kiri_paskalah"); wanitaN=loadNoWhite("wanita_kanan"); wanitaM=loadNoWhite("wanita_kanan_pasmenang"); wanitaK=loadNoWhite("wanita_kanan_paskalah"); int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bgBitmap=BitmapFactory.decodeResource(getResources(), bgId); }catch(Exception e){} initGrid(); }
-          Bitmap loadNoWhite(String name){ try{ int id=getResources().getIdentifier(name,"drawable",getPackageName()); if(id==0) return null; BitmapFactory.Options opt=new BitmapFactory.Options(); opt.inScaled=false; Bitmap src=BitmapFactory.decodeResource(getResources(), id, opt); if(src==null) return null; int maxW=900; if(src.getWidth()>maxW){ float r=(float)maxW/src.getWidth(); src=Bitmap.createScaledBitmap(src, maxW, (int)(src.getHeight()*r), true); } Bitmap out=src.copy(Bitmap.Config.ARGB_8888, true); int w=out.getWidth(), h=out.getHeight(); int[] px=new int[w*h]; out.getPixels(px,0,w,0,0,w,h); for(int i=0;i<px.length;i++){ int c=px[i]; int rr=(c>>16)&0xFF; int gg=(c>>8)&0xFF; int bb=c&0xFF; if(rr>235 && gg>235 && bb>235) px[i]=0; } out.setPixels(px,0,w,0,0,w,h); return out; }catch(Exception e){ return null; } }
+          public GameView(Context c){ super(c); try{ priaN=loadNoWhite("pria_kiri"); priaM=loadNoWhite("pria_kiri_pasmenang"); priaK=loadNoWhite("pria_kiri_paskalah"); wanitaN=loadNoWhite("wanita_kanan"); wanitaM=loadNoWhite("wanita_kanan_pasmenang"); wanitaK=loadNoWhite("wanita_kanan_paskalah"); int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bgBitmap=BitmapFactory.decodeResource(getResources(), bgId); }catch(Exception e){} initGrid(); }
+          Bitmap loadNoWhite(String n){ try{ int id=getResources().getIdentifier(n,"drawable",getPackageName()); if(id==0) return null; BitmapFactory.Options o=new BitmapFactory.Options(); o.inScaled=false; Bitmap s=BitmapFactory.decodeResource(getResources(), id, o); if(s==null) return null; int maxW=1000; if(s.getWidth()>maxW){ float r=(float)maxW/s.getWidth(); s=Bitmap.createScaledBitmap(s, maxW, (int)(s.getHeight()*r), true); } Bitmap out=s.copy(Bitmap.Config.ARGB_8888, true); int w=out.getWidth(), h=out.getHeight(); int[] px=new int[w*h]; out.getPixels(px,0,w,0,0,w,h); for(int i=0;i<px.length;i++){ int c=px[i]; int rr=(c>>16)&0xFF; int gg=(c>>8)&0xFF; int bb=c&0xFF; if(rr>232 && gg>232 && bb>232) px[i]=0; } out.setPixels(px,0,w,0,0,w,h); return out; }catch(Exception e){ return null; } }
           void setEmo(int e){ emo=e; emoTime=System.currentTimeMillis(); } void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; int tr=0; do{ t=rnd.nextInt(4); grid[r][cc]=t; tr++; }while(isMatch(r,cc)&&tr<20); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
-          void ensureBoard(){ if(boardSize>0 && cell>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(w*0.64f); cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=(int)(h*0.185f); }
-          void drawJajan3D(Canvas canvas, int type, float cx, float cy, float sz){
-          Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); p.setShadowLayer(5,0,2,Color.argb(70,0,0,0)); float r=sz*0.40f;
-          if(type==0){ p.setColor(Color.parseColor("#43A047")); canvas.drawCircle(cx, cy+sz*0.08f, r, p); p.clearShadowLayer(); Paint coco=new Paint(Paint.ANTI_ALIAS_FLAG); coco.setColor(Color.WHITE); for(int i=0;i<22;i++){ float ax=(float)(Math.sin(i*2.7)*r*0.55); float ay=(float)(Math.cos(i*1.9)*r*0.38)-r*0.28f; canvas.drawCircle(cx+ax, cy+ay, sz*0.04f, coco); } }
-          else if(type==1){ p.clearShadowLayer(); float s=sz*0.70f; float left=cx-s/2, top=cy-s/2+sz*0.08f; for(int k=0;k<3;k++){ Paint layer=new Paint(Paint.ANTI_ALIAS_FLAG); layer.setColor(k==0?Color.parseColor("#8D6E63"):k==1?Color.parseColor("#5D4037"):Color.parseColor("#6D4C41")); canvas.drawRect(left, top+k*s/3, left+s, top+(k+1)*s/3, layer); } Paint side=new Paint(); side.setColor(Color.parseColor("#3E2723")); Path path=new Path(); path.moveTo(left+s, top); path.lineTo(left+s+7, top-7); path.lineTo(left+s+7, top+s-7); path.lineTo(left+s, top+s); path.close(); canvas.drawPath(path, side); }
-          else if(type==2){ p.setColor(Color.parseColor("#FBC02D")); canvas.drawCircle(cx, cy, r, p); p.clearShadowLayer(); Paint dot=new Paint(Paint.ANTI_ALIAS_FLAG); dot.setColor(Color.parseColor("#FFFEF7")); for(int i=0;i<6;i++){ float a=(float)(i*60*Math.PI/180); canvas.drawCircle(cx+(float)Math.cos(a)*r*0.2f, cy+(float)Math.sin(a)*r*0.2f, sz*0.035f, dot); } }
-          else { p.setColor(Color.parseColor("#C62828")); canvas.drawCircle(cx, cy+sz*0.10f, r, p); p.clearShadowLayer(); Paint noodle=new Paint(); noodle.setColor(Color.parseColor("#FFEE58")); noodle.setStyle(Paint.Style.STROKE); noodle.setStrokeWidth(sz*0.045f); noodle.setStrokeCap(Paint.Cap.ROUND); Path np=new Path(); np.moveTo(cx-r*0.4f, cy+sz*0.02f); np.quadTo(cx, cy-sz*0.06f, cx+r*0.4f, cy+sz*0.02f); canvas.drawPath(np, noodle); Paint chili=new Paint(); chili.setColor(Color.parseColor("#FF1744")); canvas.drawOval(new RectF(cx-sz*0.13f, cy-sz*0.06f, cx+sz*0.15f, cy+sz*0.02f), chili); Paint daun=new Paint(); daun.setColor(Color.parseColor("#2E7D32")); canvas.drawCircle(cx+sz*0.20f, cy-sz*0.10f, sz*0.055f, daun); }
+          void ensureBoard(){ if(boardSize>0 && cell>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(w*0.60f); cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=(int)(h*0.28f); }
+          void drawJajan3D(Canvas c, int type, float cx, float cy, float sz){ Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); float r=sz*0.40f;
+          if(type==0){ p.setColor(Color.parseColor("#43A047")); c.drawCircle(cx, cy+sz*0.08f, r, p); Paint coco=new Paint(Paint.ANTI_ALIAS_FLAG); coco.setColor(Color.WHITE); for(int i=0;i<20;i++){ float ax=(float)(Math.sin(i*2.7)*r*0.5); float ay=(float)(Math.cos(i*1.9)*r*0.35)-r*0.25f; c.drawCircle(cx+ax, cy+ay, sz*0.04f, coco); } }
+          else if(type==1){ float s=sz*0.68f; float left=cx-s/2, top=cy-s/2+sz*0.08f; for(int k=0;k<3;k++){ Paint layer=new Paint(Paint.ANTI_ALIAS_FLAG); layer.setColor(k==0?Color.parseColor("#8D6E63"):k==1?Color.parseColor("#5D4037"):Color.parseColor("#6D4C41")); c.drawRect(left, top+k*s/3, left+s, top+(k+1)*s/3, layer); } }
+          else if(type==2){ p.setColor(Color.parseColor("#FBC02D")); c.drawCircle(cx, cy, r, p); Paint dot=new Paint(Paint.ANTI_ALIAS_FLAG); dot.setColor(Color.WHITE); for(int i=0;i<6;i++){ float a=(float)(i*60*Math.PI/180); c.drawCircle(cx+(float)Math.cos(a)*r*0.2f, cy+(float)Math.sin(a)*r*0.2f, sz*0.035f, dot); } }
+          else { p.setColor(Color.parseColor("#C62828")); c.drawCircle(cx, cy+sz*0.10f, r, p); Paint noodle=new Paint(); noodle.setColor(Color.parseColor("#FFEE58")); noodle.setStyle(Paint.Style.STROKE); noodle.setStrokeWidth(sz*0.045f); noodle.setStrokeCap(Paint.Cap.ROUND); Path np=new Path(); np.moveTo(cx-r*0.4f, cy+sz*0.02f); np.quadTo(cx, cy-sz*0.06f, cx+r*0.4f, cy+sz*0.02f); c.drawPath(np, noodle); }
           }
           protected void onDraw(Canvas canvas){
           ensureBoard(); long now=System.currentTimeMillis(); float totalSec=(now-startTime)/1000f;
           if(bgBitmap!=null){ canvas.drawBitmap(bgBitmap, null, new Rect(0,0,getWidth(), getHeight()), null); } else { canvas.drawColor(Color.parseColor("#87CEEB")); }
           if(boardSize==0) return;
-          Paint wood=new Paint(); wood.setColor(Color.parseColor("#6B4423")); RectF header=new RectF(10,12,getWidth()-10,180); canvas.drawRoundRect(header,16,16,wood);
+          Paint wood=new Paint(); wood.setColor(Color.parseColor("#6B4423")); RectF header=new RectF(10,12,getWidth()-10,165); canvas.drawRoundRect(header,16,16,wood);
           Paint goldB=new Paint(); goldB.setColor(Color.parseColor("#E6A21E")); goldB.setStyle(Paint.Style.STROKE); goldB.setStrokeWidth(4); canvas.drawRoundRect(header,16,16,goldB);
-          Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG); txt.setColor(Color.parseColor("#FFD54F")); txt.setTextSize(36); txt.setFakeBoldText(true); txt.setTextAlign(Paint.Align.CENTER); txt.setShadowLayer(4,2,2,Color.BLACK); canvas.drawText("Rian's Jajan Crush", getWidth()/2f, 72, txt); txt.clearShadowLayer();
-          int pillW=(getWidth()-48)/3; int pillY=96; String[] labs={"Level 1","Score "+score,"Moves "+moves};
-          for(int i=0;i<3;i++){ RectF pill=new RectF(14+i*(pillW+8), pillY, 14+i*(pillW+8)+pillW, pillY+56); Paint bg=new Paint(); bg.setColor(Color.parseColor("#3E2723")); canvas.drawRoundRect(pill,28,28,bg); canvas.drawRoundRect(pill,28,28,goldB); txt.setTextSize(14); txt.setColor(Color.WHITE); canvas.drawText(labs[i], pill.centerX(), pill.centerY()+5, txt); }
-          float breathe=(float)Math.sin(totalSec*2.2f)*0.025f + 1f; float floatY=(float)Math.sin(totalSec*1.8f)*6f;
-          float emoScale=1f, emoY=0, emoRot=0; float elapsed=(now-emoTime)/1000f;
-          if(emo==1 && elapsed<1.6f){ emoScale=1f + (float)Math.sin(elapsed*14)*0.22f; emoY=(float)Math.sin(elapsed*20)*20; emoRot=(float)Math.sin(elapsed*15)*5; postInvalidateDelayed(16); } else if(emo==1 && elapsed>=1.6f) emo=0;
-          if(emo==0) postInvalidateDelayed(33);
-          int charH=(int)(getHeight()*0.58f); int charW=(int)(charH*0.48f); int groundY=(int)(getHeight()*0.92f); int charTopBase=groundY-charH;
-          Paint shadowP=new Paint(); shadowP.setColor(Color.BLACK); shadowP.setAlpha(50); canvas.drawOval(new RectF(10, groundY-12, 10+charW*0.7f, groundY+4), shadowP); canvas.drawOval(new RectF(getWidth()-10-charW*0.7f, groundY-12, getWidth()-10, groundY+4), shadowP);
-          Bitmap curP=priaN; if(emo==1) curP=priaM!=null?priaM:priaN; else if(emo==2) curP=priaK!=null?priaK:priaN;
-          if(curP!=null){ float s=breathe*(emo==1?emoScale:1f); int left=-6; int top=(int)(charTopBase + floatY + emoY); int right=left+(int)(charW*s); int bottom=top+(int)(charH*s); canvas.save(); canvas.rotate(emoRot*0.5f, left+charW/2f, top+charH*0.6f); canvas.drawBitmap(curP, null, new Rect(left,top,right,bottom), null); canvas.restore(); }
-          Bitmap curW=wanitaN; if(emo==1) curW=wanitaM!=null?wanitaM:wanitaN; else if(emo==2) curW=wanitaK!=null?wanitaK:wanitaN;
-          if(curW!=null){ float s=breathe*(emo==1?emoScale:1f); int right=getWidth()+6; int left=right-(int)(charW*s); int top=(int)(charTopBase + floatY + emoY + Math.sin(totalSec*1.8f+1)*3); int bottom=top+(int)(charH*s); canvas.save(); canvas.rotate(-emoRot*0.5f, left+charW/2f, top+charH*0.6f); canvas.drawBitmap(curW, null, new Rect(left,top,right,bottom), null); canvas.restore(); }
-          float outer=18; RectF outerR=new RectF(boardX-outer, boardY-outer, boardX+boardSize+outer, boardY+boardSize+outer); Paint outerWood=new Paint(); outerWood.setColor(Color.parseColor("#6D4C41")); canvas.drawRoundRect(outerR,22,22,outerWood); canvas.drawRoundRect(outerR,22,22,goldB);
-          RectF innerR=new RectF(boardX-5, boardY-5, boardX+boardSize+5, boardY+boardSize+5); Paint dark=new Paint(); dark.setColor(Color.parseColor("#4E342E")); canvas.drawRoundRect(innerR,14,14,dark);
-          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=boardX+c*cell+4, t=boardY+r*cell+4, rr=boardX+(c+1)*cell-4, b=boardY+(r+1)*cell-4; RectF tile=new RectF(l,t,rr,b); Paint tp=new Paint(); tp.setColor(Color.parseColor("#FBE9C9")); canvas.drawRoundRect(tile,10,10,tp); if(grid[r][c]!=-1) drawJajan3D(canvas, grid[r][c], tile.centerX(), tile.centerY(), cell*0.82f); }
-          if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(200); canvas.drawRect(0,0,getWidth(),getHeight(),over); txt.setTextSize(44); txt.setColor(Color.YELLOW); txt.setTextAlign(Paint.Align.CENTER); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, txt); } }
+          Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG); txt.setColor(Color.parseColor("#FFD54F")); txt.setTextSize(34); txt.setFakeBoldText(true); txt.setTextAlign(Paint.Align.CENTER); txt.setShadowLayer(4,2,2,Color.BLACK); canvas.drawText("Rian's Jajan Crush", getWidth()/2f, 68, txt); txt.clearShadowLayer();
+          int pillW=(getWidth()-48)/3; int pillY=88; String[] labs={"Level 1","Score "+score,"Moves "+moves};
+          for(int i=0;i<3;i++){ RectF pill=new RectF(14+i*(pillW+8), pillY, 14+i*(pillW+8)+pillW, pillY+50); Paint bg=new Paint(); bg.setColor(Color.parseColor("#3E2723")); canvas.drawRoundRect(pill,28,28,bg); canvas.drawRoundRect(pill,28,28,goldB); txt.setTextSize(13); txt.setColor(Color.WHITE); canvas.drawText(labs[i], pill.centerX(), pill.centerY()+4, txt); }
+          // PAPAN
+          float outer=16; RectF outerR=new RectF(boardX-outer, boardY-outer, boardX+boardSize+outer, boardY+boardSize+outer); Paint outerWood=new Paint(); outerWood.setColor(Color.parseColor("#6D4C41")); canvas.drawRoundRect(outerR,20,20,outerWood); canvas.drawRoundRect(outerR,20,20,goldB);
+          RectF innerR=new RectF(boardX-4, boardY-4, boardX+boardSize+4, boardY+boardSize+4); Paint dark=new Paint(); dark.setColor(Color.parseColor("#4E342E")); canvas.drawRoundRect(innerR,12,12,dark);
+          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=boardX+c*cell+4, t=boardY+r*cell+4, rr=boardX+(c+1)*cell-4, b=boardY+(r+1)*cell-4; RectF tile=new RectF(l,t,rr,b); Paint tp=new Paint(); tp.setColor(Color.parseColor("#FBE9C9")); canvas.drawRoundRect(tile,10,10,tp); if(grid[r][c]!=-1) drawJajan3D(canvas, grid[r][c], tile.centerX(), tile.centerY(), cell*0.80f); }
+          // ===== ANIMASI HIDUP BENERAN =====
+          float elapsed=(now-emoTime)/1000f;
+          float idleBreathe=(float)Math.sin(totalSec*2.2)*0.018f + 1f;
+          float idleSway=(float)Math.sin(totalSec*0.9)*4f;
+          float idleBob=(float)Math.sin(totalSec*1.7f)*4f;
+          float jumpY=0, scaleAdd=0, rot=0;
+          boolean isHappy = emo==1 && elapsed<2.0f;
+          boolean isSad = emo==2 && elapsed<2.0f;
+          if(isHappy){
+            float t=elapsed;
+            jumpY = (float)(-Math.abs(Math.sin(t*5))*70 - Math.abs(Math.sin(t*9))*20);
+            scaleAdd = (float)Math.sin(t*12)*0.15f;
+            rot = (float)Math.sin(t*10)*8f;
+            postInvalidateDelayed(16);
+          } else if(isSad){
+            jumpY = 10;
+            scaleAdd = -0.08f;
+            postInvalidateDelayed(16);
+          } else {
+            emo=0;
+            postInvalidateDelayed(32);
+          }
+          int charH=(int)(getHeight()*0.62f); int charW=(int)(charH*0.45f); int groundY=(int)(getHeight()*0.91f); int baseTop=groundY-charH;
+          Paint shadowP=new Paint(); shadowP.setColor(Color.BLACK); shadowP.setAlpha(35); canvas.drawOval(new RectF(8, groundY-10, 8+charW*0.7f, groundY+2), shadowP); canvas.drawOval(new RectF(getWidth()-8-charW*0.7f, groundY-10, getWidth()-8, groundY+2), shadowP);
+          // PRIA KIRI - JOGET HIDUP
+          Bitmap curP=priaN; if(isHappy) curP=priaM!=null?priaM:priaN; else if(isSad) curP=priaK!=null?priaK:priaN;
+          if(curP!=null){
+            float s = (isHappy?1f+scaleAdd:idleBreathe);
+            float sx = idleSway + (isHappy?rot:0);
+            int left = (int)(-10 + sx);
+            int top = (int)(baseTop + idleBob + jumpY);
+            int right = left + (int)(charW*s);
+            int bottom = top + (int)(charH*s);
+            canvas.save();
+            if(isHappy) canvas.rotate(rot, left+charW/2f, top+charH*0.5f);
+            canvas.drawBitmap(curP, null, new Rect(left,top,right,bottom), null);
+            canvas.restore();
+          }
+          // WANITA KANAN - JOGET HIDUP BEDA FASE
+          Bitmap curW=wanitaN; if(isHappy) curW=wanitaM!=null?wanitaM:wanitaN; else if(isSad) curW=wanitaK!=null?wanitaK:wanitaN;
+          if(curW!=null){
+            float s = (isHappy?1f+scaleAdd:idleBreathe);
+            float sx = -idleSway + (isHappy?-rot:0);
+            float bob2 = (float)Math.sin(totalSec*1.7f+1f)*4f;
+            int right = getWidth()+10 + (int)sx;
+            int left = right - (int)(charW*s);
+            int top = (int)(baseTop + bob2 + jumpY);
+            int bottom = top + (int)(charH*s);
+            canvas.save();
+            if(isHappy) canvas.rotate(-rot, left+charW/2f, top+charH*0.5f);
+            canvas.drawBitmap(curW, null, new Rect(left,top,right,bottom), null);
+            canvas.restore();
+          }
+          if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(200); canvas.drawRect(0,0,getWidth(),getHeight(),over); txt.setTextSize(44); txt.setColor(Color.YELLOW); txt.setTextAlign(Paint.Align.CENTER); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, txt); }
+          }
           public boolean onTouchEvent(MotionEvent e){ if(moves<=0 && e.getAction()==MotionEvent.ACTION_UP){ score=500; moves=30; initGrid(); emo=0; invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; } if(e.getAction()==MotionEvent.ACTION_UP){ float upX=e.getX(), upY=e.getY(); float dx=upX-downX, dy=upY-downY; int c=(int)((downX-boardX)/cell); int r=(int)((downY-boardY)/cell); if(r<0||r>=ROWS||c<0||c>=COLS) return true; int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cell*0.25f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cell*0.25f) nr=r+(dy>0?1:-1); } if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true; int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; if(moves<=0) setEmo(2); } invalidate(); return true; } return true; }
           boolean check(){ boolean[][] mark=new boolean[ROWS][COLS]; boolean found=false; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS-2;cc++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r][cc+1]==t&&grid[r][cc+2]==t){ int k=cc; while(k<COLS&&grid[r][k]==t){ mark[r][k]=true; k++; found=true; } } } for(int cc=0;cc<COLS;cc++) for(int r=0;r<ROWS-2;r++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r+1][cc]==t&&grid[r+2][cc]==t){ int k=r; while(k<ROWS&&grid[k][cc]==t){ mark[k][cc]=true; k++; found=true; } } } if(!found) return false; int cnt=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(mark[r][cc]){ grid[r][cc]=-1; cnt++; } score+=cnt*40; setEmo(1); drop(); postDelayed(new Runnable(){ public void run(){ if(check()) invalidate(); }}, 230); return true; }
           void drop(){ for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=rnd.nextInt(4); } }
@@ -125,5 +143,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-HIDUP-SAMPING-FIX
+          name: Jajan-Crush-HIDUP-JOGET
           path: app/build/outputs/apk/debug/*.apk
