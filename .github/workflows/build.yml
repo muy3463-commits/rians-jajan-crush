@@ -30,18 +30,16 @@ jobs:
           printf 'include ":app"\n' > settings.gradle
           cat > build.gradle << 'EOF'
           buildscript {
-            repositories {
-              google()
-              mavenCentral()
-              gradlePluginPortal()
-            }
-            dependencies {
-              classpath 'com.android.tools.build:gradle:8.1.0'
-            }
+            repositories { google(); mavenCentral(); gradlePluginPortal() }
+            dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+          }
+          allprojects {
+            repositories { google(); mavenCentral() }
           }
           EOF
           cat > app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
+          repositories { google(); mavenCentral() }
           android {
             namespace 'com.rians.jajancrush'
             compileSdk 34
@@ -49,8 +47,8 @@ jobs:
               applicationId 'com.rians.jajancrush'
               minSdk 21
               targetSdk 34
-              versionCode 28
-              versionName '28.0'
+              versionCode 29
+              versionName '29.0'
             }
           }
           EOF
@@ -99,5 +97,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-FIX-HITAM
+          name: Jajan-Crush-FIX-AAPT2
           path: app/build/outputs/apk/debug/*.apk
