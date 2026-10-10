@@ -15,16 +15,6 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
-          mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/mipmap-xxxhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi
-          if [ -f icon.png ]; then for D in mipmap-xxxhdpi mipmap-xxhdpi mipmap-xhdpi mipmap-hdpi mipmap-mdpi; do cp icon.png app/src/main/res/$D/ic_launcher.png; cp icon.png app/src/main/res/$D/ic_launcher_round.png; done; fi
-          cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp pria_kiri.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp pria_kiri_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp pria_kiri_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp wanita_kanan.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp wanita_kanan_pasmenang.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp wanita_kanan_paskalah.png app/src/main/res/drawable/ 2>/dev/null || true
       - name: Create Files
         run: |
           printf 'include ":app"\n' > settings.gradle
@@ -33,9 +23,7 @@ jobs:
             repositories { google(); mavenCentral(); gradlePluginPortal() }
             dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
           }
-          allprojects {
-            repositories { google(); mavenCentral() }
-          }
+          allprojects { repositories { google(); mavenCentral() } }
           EOF
           cat > app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
@@ -47,45 +35,57 @@ jobs:
               applicationId 'com.rians.jajancrush'
               minSdk 21
               targetSdk 34
-              versionCode 29
-              versionName '29.0'
+              versionCode 30
+              versionName '30.0'
             }
           }
           EOF
-          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:label="Jajan Crush"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           mkdir -p app/src/main/java/com/rians/jajancrush
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'ENDJAVA'
           package com.rians.jajancrush;
           import android.app.Activity; import android.os.Bundle; import android.content.Context; import android.graphics.*; import android.view.*; import java.util.*;
           public class MainActivity extends Activity {
-          protected void onCreate(Bundle b){ super.onCreate(b); setContentView(new GameView(this)); }
+          protected void onCreate(Bundle b){ super.onCreate(b); getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); setContentView(new GameView(this)); }
           class GameView extends View {
           int ROWS=5, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=0, moves=21; Random rnd=new Random();
-          int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Paint paint, textPaint; Bitmap[] jajanBmp=new Bitmap[4]; Bitmap bgBitmap;
-          Bitmap priaN, priaM, priaK, wanitaN, wanitaM, wanitaK; RectF[] tileRects=new RectF[25]; int emo=0; long emoTime=0;
-          public GameView(Context c){ super(c); paint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true);
-          try{ int id=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(id!=0){ Bitmap tmp=BitmapFactory.decodeResource(getResources(), id); bgBitmap=Bitmap.createBitmap(tmp,0,0,tmp.getWidth(),(int)(tmp.getHeight()*0.55)); }
-          priaN=load("pria_kiri"); priaM=load("pria_kiri_pasmenang"); priaK=load("pria_kiri_paskalah"); wanitaN=load("wanita_kanan"); wanitaM=load("wanita_kanan_pasmenang"); wanitaK=load("wanita_kanan_paskalah"); }catch(Exception e){} initGrid(); }
-          Bitmap load(String n){ try{ int id=getResources().getIdentifier(n,"drawable",getPackageName()); if(id==0) return null; Bitmap src=BitmapFactory.decodeResource(getResources(), id); Bitmap out=src.copy(Bitmap.Config.ARGB_8888,true); int w=out.getWidth(), h=out.getHeight(); for(int y=0;y<h;y++){ for(int x=0;x<w;x++){ int col=out.getPixel(x,y); int r=Color.red(col); int g=Color.green(col); int b=Color.blue(col); if(r>235&&g>235&&b>235){ out.setPixel(x,y,Color.TRANSPARENT); } } } return out; }catch(Exception e){ return null; } }
-          void setEmo(int e){ emo=e; emoTime=System.currentTimeMillis(); } void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; int tr=0; do{ t=rnd.nextInt(4); grid[r][cc]=t; tr++; }while(isMatch(r,cc)&&tr<20); } }
+          int cell=0, boardX=0, boardY=0, boardSize=0; float downX, downY; Paint paint, textPaint; int emo=0; long emoTime=0; float shake=0;
+          public GameView(Context c){ super(c); paint=new Paint(Paint.ANTI_ALIAS_FLAG); textPaint=new Paint(Paint.ANTI_ALIAS_FLAG); initGrid(); }
+          void setEmo(int e){ emo=e; emoTime=System.currentTimeMillis(); }
+          void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; int tr=0; do{ t=rnd.nextInt(4); grid[r][cc]=t; tr++; }while(isMatch(r,cc)&&tr<20); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
-          void createBmps(int size){ if(size<=0) return; if(jajanBmp[0]!=null) return; int s=size-10; if(s<=0) s=40; for(int i=0;i<4;i++){ jajanBmp[i]=Bitmap.createBitmap(s,s,Bitmap.Config.ARGB_8888); Canvas cv=new Canvas(jajanBmp[i]); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
-          if(i==0){ p.setColor(Color.parseColor("#4CAF50")); cv.drawCircle(s/2f,s/2f,s/2.2f,p); } else if(i==1){ p.setColor(Color.parseColor("#5D4037")); cv.drawRoundRect(new RectF(4,4,s-4,s-4),8,8,p); } else if(i==2){ p.setColor(Color.parseColor("#FBC02D")); cv.drawCircle(s/2f,s/2f,s/2.2f,p); } else { p.setColor(Color.parseColor("#D32F2F")); cv.drawRoundRect(new RectF(2,2,s-2,s-2),16,16,p); } } }
-          void ensureBoard(){ if(boardSize>0 && cell>0 && tileRects[0]!=null) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(Math.min(w*0.86, h*0.55)); if(boardSize<200) boardSize=200; cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=125; createBmps(cell); for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; tileRects[idx]=new RectF(boardX+c*cell+4, boardY+r*cell+4, boardX+(c+1)*cell-4, boardY+(r+1)*cell-4); } }
-          protected void onSizeChanged(int w,int h,int ow,int oh){ ensureBoard(); }
-          protected void onDraw(Canvas canvas){ ensureBoard(); canvas.drawColor(Color.parseColor("#3E2723")); if(bgBitmap!=null && getWidth()>0){ canvas.drawBitmap(bgBitmap, null, new Rect(0,0,getWidth(), getHeight()), null); Paint dim=new Paint(); dim.setColor(Color.BLACK); dim.setAlpha(55); canvas.drawRect(0,0,getWidth(),getHeight(),dim); }
-          if(boardSize==0){ textPaint.setTextSize(20); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Loading...", getWidth()/2f, getHeight()/2f, textPaint); return; }
-          Paint wood=new Paint(); wood.setColor(Color.parseColor("#4E342E")); wood.setAlpha(235); RectF topRect=new RectF(8,8,getWidth()-8, 108); canvas.drawRoundRect(topRect, 14,14, wood); Paint border=new Paint(); border.setColor(Color.parseColor("#D7A76F")); border.setStyle(Paint.Style.STROKE); border.setStrokeWidth(3); canvas.drawRoundRect(topRect,14,14,border);
-          textPaint.setTextSize(20); textPaint.setColor(Color.parseColor("#FFD54F")); textPaint.setShadowLayer(3,2,2,Color.BLACK); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Rians Jajan Crush", getWidth()/2f, 34, textPaint);
-          textPaint.setTextSize(12); textPaint.setColor(Color.WHITE); textPaint.setShadowLayer(0,0,0,0); int bw=(getWidth()-36)/3; Paint box=new Paint(); box.setColor(Color.parseColor("#3E2723")); Paint boxStroke=new Paint(); boxStroke.setColor(Color.parseColor("#D7A76F")); boxStroke.setStyle(Paint.Style.STROKE); boxStroke.setStrokeWidth(2);
-          for(int i=0;i<3;i++){ RectF r=new RectF(12+i*(bw+6), 46, 12+i*(bw+6)+bw, 94); canvas.drawRoundRect(r,8,8,box); canvas.drawRoundRect(r,8,8,boxStroke); String txt=i==0?"Level 1": i==1?"Score "+score:"Moves "+moves; canvas.drawText(txt, r.centerX(), r.centerY()+4, textPaint); }
-          Paint boardBg=new Paint(); boardBg.setColor(Color.parseColor("#8D6E63")); boardBg.setAlpha(230); RectF boardFrame=new RectF(boardX-7, boardY-7, boardX+boardSize+7, boardY+boardSize+7); canvas.drawRoundRect(boardFrame, 14,14, boardBg); canvas.drawRoundRect(boardFrame,14,14,border);
-          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ int idx=r*COLS+c; if(tileRects[idx]==null) continue; Paint tileP=new Paint(); tileP.setColor(Color.parseColor("#FFF8E1")); canvas.drawRoundRect(tileRects[idx], 9,9, tileP); if(grid[r][c]!=-1 && jajanBmp[grid[r][c]]!=null) canvas.drawBitmap(jajanBmp[grid[r][c]], boardX+c*cell+5, boardY+r*cell+5, null); }
-          long now=System.currentTimeMillis(); float elapsed=(now-emoTime)/1000f; float scale=1f; Bitmap curP=priaN, curW=wanitaN; if(emo==1){ curP=priaM!=null? priaM:priaN; curW=wanitaM!=null? wanitaM:wanitaN; if(elapsed<1.3f){ scale=1f + (float)Math.sin(elapsed*10)*0.15f; postDelayed(new Runnable(){ public void run(){ invalidate(); }}, 16); } else { emo=0; } } else if(emo==2){ curP=priaK!=null? priaK:priaN; curW=wanitaK!=null? wanitaK:wanitaN; }
-          int charW=(int)(getWidth()*0.28); int charH=(int)(charW*1.9); if(curP!=null){ int left=2; int top=boardY+boardSize+6; int right=left+(int)(charW*scale); int bottom=top+(int)(charH*scale); canvas.drawBitmap(curP, null, new Rect(left, top, right, bottom), null); }
-          if(curW!=null){ int right=getWidth()-2; int left=right-(int)(charW*scale); int top=boardY+boardSize+6; int bottom=top+(int)(charH*scale); canvas.drawBitmap(curW, null, new Rect(left, top, right, bottom), null); }
-          textPaint.setTextSize(12); textPaint.setColor(Color.WHITE); canvas.drawText(emo==1?"PECAAH SENANG!": emo==2?"KALAH SEDIH...":"GESER 3 JAJAN SAMA!", getWidth()/2f, boardY+boardSize+24, textPaint);
-          if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(170); canvas.drawRect(0,0,getWidth(),getHeight(),over); textPaint.setTextSize(36); textPaint.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f-10, textPaint); textPaint.setTextSize(18); textPaint.setColor(Color.WHITE); canvas.drawText("Tap untuk main lagi", getWidth()/2f, getHeight()/2f+24, textPaint); } }
+          void ensureBoard(){ if(boardSize>0 && cell>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; boardSize=(int)(Math.min(w*0.88, h*0.58)); if(boardSize<250) boardSize=250; cell=boardSize/COLS; boardX=(w-boardSize)/2; boardY=130; }
+          protected void onDraw(Canvas canvas){
+          ensureBoard();
+          // BACKGROUND PASTI KELIATAN - COKLAT TERANG
+          Paint bg=new Paint(); bg.setColor(Color.parseColor("#5D4037")); canvas.drawRect(0,0,getWidth(),getHeight(),bg);
+          // langit
+          Paint sky=new Paint(); sky.setColor(Color.parseColor("#8D6E63")); canvas.drawRect(0,0,getWidth(),boardY-10,sky);
+          if(boardSize==0){ textPaint.setColor(Color.WHITE); textPaint.setTextSize(30); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("Loading Jajan Crush...", getWidth()/2f, getHeight()/2f, textPaint); return; }
+          // HEADER
+          Paint wood=new Paint(); wood.setColor(Color.parseColor("#3E2723")); RectF top=new RectF(10,10,getWidth()-10,120); canvas.drawRoundRect(top,16,16,wood);
+          Paint border=new Paint(); border.setColor(Color.parseColor("#FFD54F")); border.setStyle(Paint.Style.STROKE); border.setStrokeWidth(4); canvas.drawRoundRect(top,16,16,border);
+          textPaint.setColor(Color.parseColor("#FFD54F")); textPaint.setTextSize(28); textPaint.setFakeBoldText(true); textPaint.setTextAlign(Paint.Align.CENTER); canvas.drawText("RIANS JAJAN CRUSH", getWidth()/2f, 48, textPaint);
+          textPaint.setTextSize(16); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(false);
+          int bw=(getWidth()-50)/3;
+          for(int i=0;i<3;i++){ RectF r=new RectF(15+i*(bw+10), 62, 15+i*(bw+10)+bw, 108); Paint bx=new Paint(); bx.setColor(Color.parseColor("#4E342E")); canvas.drawRoundRect(r,10,10,bx); canvas.drawRoundRect(r,10,10,border); String txt=i==0?"LVL 1": i==1?"Score "+score:"Moves "+moves; canvas.drawText(txt, r.centerX(), r.centerY()+6, textPaint); }
+          // BOARD
+          Paint boardBg=new Paint(); boardBg.setColor(Color.parseColor("#D7CCC8")); RectF frame=new RectF(boardX-10, boardY-10, boardX+boardSize+10, boardY+boardSize+10); canvas.drawRoundRect(frame,18,18,boardBg); canvas.drawRoundRect(frame,18,18,border);
+          // TILES
+          for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ RectF tr=new RectF(boardX+c*cell+5, boardY+r*cell+5, boardX+(c+1)*cell-5, boardY+(r+1)*cell-5); Paint tp=new Paint(Paint.ANTI_ALIAS_FLAG); tp.setColor(Color.WHITE); canvas.drawRoundRect(tr,12,12,tp);
+          if(grid[r][c]!=-1){ Paint jp=new Paint(Paint.ANTI_ALIAS_FLAG); int t=grid[r][c]; if(t==0) jp.setColor(Color.parseColor("#4CAF50")); else if(t==1) jp.setColor(Color.parseColor("#795548")); else if(t==2) jp.setColor(Color.parseColor("#FFC107")); else jp.setColor(Color.parseColor("#E91E63"));
+          canvas.drawCircle(tr.centerX(), tr.centerY(), cell*0.32f, jp); textPaint.setTextSize(cell*0.4f); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true); String emoTxt=t==0?"O": t==1?"C": t==2?"P":"L"; canvas.drawText(emoTxt, tr.centerX(), tr.centerY()+8, textPaint); } }
+          // CHARACTERS - PASTI KELIATAN, GOYANG
+          long now=System.currentTimeMillis(); float elapsed=(now-emoTime)/1000f; float scale=1f, offY=0; if(emo==1 && elapsed<1.2f){ scale=1f + (float)Math.sin(elapsed*14)*0.18f; offY=(float)Math.sin(elapsed*20)*12; postInvalidateDelayed(16); } else if(emo==1 && elapsed>=1.2f) emo=0;
+          // Pria kiri
+          int charW=(int)(getWidth()*0.26); int charH=(int)(charW*1.5); int left=10; int topY=boardY+boardSize+15 + (int)offY; Paint cp=new Paint(); cp.setColor(emo==1?Color.parseColor("#4CAF50"): emo==2?Color.parseColor("#616161"):Color.parseColor("#2196F3"));
+          RectF priaRect=new RectF(left, topY, left+charW*scale, topY+charH*scale); canvas.drawRoundRect(priaRect, 20,20, cp); textPaint.setColor(Color.WHITE); textPaint.setTextSize(18); canvas.drawText(emo==1?"SENANG!":emo==2?"SEDih":"PRIA", priaRect.centerX(), priaRect.centerY(), textPaint);
+          // Wanita kanan
+          int right=getWidth()-10; Paint cw=new Paint(); cw.setColor(emo==1?Color.parseColor("#E91E63"): emo==2?Color.parseColor("#616161"):Color.parseColor("#9C27B0"));
+          RectF wanitaRect=new RectF(right-charW*scale, topY, right, topY+charH*scale); canvas.drawRoundRect(wanitaRect,20,20,cw); canvas.drawText(emo==1?"YEAY!":emo==2?"Hiks":"WANITA", wanitaRect.centerX(), wanitaRect.centerY(), textPaint);
+          // Text bawah
+          textPaint.setTextSize(18); textPaint.setColor(Color.WHITE); textPaint.setFakeBoldText(true); canvas.drawText(emo==1?"PECAAH!! GOYANG!": emo==2?"KALAH...":"GESER 3 KUE SAMA!", getWidth()/2f, boardY+boardSize+30, textPaint);
+          if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180); canvas.drawRect(0,0,getWidth(),getHeight(),over); textPaint.setTextSize(44); textPaint.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f-20, textPaint); textPaint.setTextSize(20); textPaint.setColor(Color.WHITE); canvas.drawText("Tap untuk main lagi", getWidth()/2f, getHeight()/2f+20, textPaint); } }
           public boolean onTouchEvent(MotionEvent e){ if(moves<=0 && e.getAction()==MotionEvent.ACTION_UP){ score=0; moves=21; initGrid(); emo=0; invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; } if(e.getAction()==MotionEvent.ACTION_UP){ float upX=e.getX(), upY=e.getY(); float dx=upX-downX, dy=upY-downY; int c=(int)((downX-boardX)/cell); int r=(int)((downY-boardY)/cell); if(r<0||r>=ROWS||c<0||c>=COLS) return true; int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cell*0.25f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cell*0.25f) nr=r+(dy>0?1:-1); } if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true; int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; if(moves<=0){ setEmo(2); } } invalidate(); return true; } return true; }
           boolean check(){ boolean[][] mark=new boolean[ROWS][COLS]; boolean found=false; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS-2;cc++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r][cc+1]==t&&grid[r][cc+2]==t){ int k=cc; while(k<COLS&&grid[r][k]==t){ mark[r][k]=true; k++; found=true; } } } for(int cc=0;cc<COLS;cc++) for(int r=0;r<ROWS-2;r++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r+1][cc]==t&&grid[r+2][cc]==t){ int k=r; while(k<ROWS&&grid[k][cc]==t){ mark[k][cc]=true; k++; found=true; } } } if(!found) return false; int cnt=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(mark[r][cc]){ grid[r][cc]=-1; cnt++; } score+=cnt*40; setEmo(1); drop(); postDelayed(new Runnable(){ public void run(){ if(check()) invalidate(); }}, 220); return true; }
           void drop(){ for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=rnd.nextInt(4); } }
@@ -97,5 +97,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-FIX-AAPT2
+          name: Jajan-Crush-TERANG-100
           path: app/build/outputs/apk/debug/*.apk
