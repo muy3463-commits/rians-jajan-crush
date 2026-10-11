@@ -76,9 +76,8 @@ jobs:
                   String s=prefs.getString("grid",""); if(s.length()<10) return false;
                   String[] ar=s.split(","); int idx=0;
                   for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(idx<ar.length) grid[r][cc]=Integer.parseInt(ar[idx]); idx++; }
-                  if(level>=1) return true;
-                }catch(Exception e){}
-                return false;
+                  return true;
+                }catch(Exception e){} return false;
               }
               void toggleMute(){ isMuted=!isMuted; try{ prefs.edit().putBoolean("mute",isMuted).apply(); }catch(Exception e){} try{ if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); } else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); } }catch(Exception e){} }
               void initGrid(){
@@ -86,8 +85,7 @@ jobs:
                 for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
                   int v; do{ v=(int)(Math.random()*types); grid[r][cc]=v; } while( (r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc]) || (cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2]) );
                 }
-                failCount=0; jackpotReady=false; selR=-1; selC=-1;
-                target = 500 + (level-1)*150; moves = Math.max(28 - (level-1)*2, 12); saveGame();
+                failCount=0; jackpotReady=false; selR=-1; selC=-1; target = 500 + (level-1)*150; moves = Math.max(28 - (level-1)*2, 12); saveGame();
               }
               void spawn(float x,float y){ for(int i=0;i<20;i++){ Particle p=new Particle(); p.x=x; p.y=y; p.vx=(float)(Math.random()*14-7); p.vy=(float)(Math.random()*-14-3); p.r=(float)(Math.random()*8+4); p.alpha=255; parts.add(p); } }
               boolean check(){
@@ -134,20 +132,23 @@ jobs:
                     Paint ic=new Paint(Paint.ANTI_ALIAS_FLAG); ic.setColor(Color.parseColor("#FFCA28")); ic.setTextAlign(Paint.Align.CENTER); ic.setTextSize(w*0.05f);
                     canvas.drawText(isMuted?"X":"♪", boxMute.centerX(), boxMute.centerY()+w*0.018f, ic);
                   }
-                  Paint woodCell=new Paint(Paint.ANTI_ALIAS_FLAG); woodCell.setColor(Color.parseColor("#4E342E"));
-                  Paint woodDark=new Paint(Paint.ANTI_ALIAS_FLAG); woodDark.setColor(Color.parseColor("#3E2723"));
-                  Paint borderLine=new Paint(Paint.ANTI_ALIAS_FLAG); borderLine.setColor(Color.parseColor("#5D4037")); borderLine.setStyle(Paint.Style.STROKE); borderLine.setStrokeWidth(1.2f);
-                  Paint selGold=new Paint(Paint.ANTI_ALIAS_FLAG); selGold.setColor(Color.parseColor("#FFEB3B")); selGold.setStyle(Paint.Style.STROKE); selGold.setStrokeWidth(5);
+                  Paint woodPlank=new Paint(Paint.ANTI_ALIAS_FLAG); woodPlank.setColor(Color.parseColor("#6D4C41"));
+                  Paint woodBorder=new Paint(Paint.ANTI_ALIAS_FLAG); woodBorder.setColor(Color.parseColor("#5D4037")); woodBorder.setStyle(Paint.Style.STROKE); woodBorder.setStrokeWidth(1f);
+                  Paint selGold=new Paint(Paint.ANTI_ALIAS_FLAG); selGold.setColor(Color.parseColor("#FFEB3B")); selGold.setStyle(Paint.Style.STROKE); selGold.setStrokeWidth(4);
                   Paint jack=new Paint(Paint.ANTI_ALIAS_FLAG); jack.setColor(Color.YELLOW); jack.setStyle(Paint.Style.STROKE); jack.setStrokeWidth(5);
                   for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
                     float x=gridX+cc*cellW, y=gridY+r*cellH;
                     RectF rf=new RectF(x+1,y+1,x+cellW-1,y+cellH-1);
-                    canvas.drawRoundRect(rf,6,6,woodCell);
-                    canvas.drawRoundRect(rf,6,6,borderLine);
-                    if(r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),8,8,selGold);
-                    if(jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(110+(jackpotAnim%145)); jackpotAnim+=9; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),8,8,jack); }
+                    canvas.drawRoundRect(rf,5,5,woodPlank);
+                    canvas.drawRoundRect(rf,5,5,woodBorder);
+                    if(r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),7,7,selGold);
+                    if(jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(110+(jackpotAnim%145)); jackpotAnim+=9; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),7,7,jack); }
                     if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanBmp[grid[r][cc]]!=null){
-                      canvas.drawBitmap(jajanBmp[grid[r][cc]], null, new RectF(x+3,y+3,x+cellW-3,y+cellH-3), null);
+                      float cx=x+cellW/2, cy=y+cellH/2;
+                      Path circlePath=new Path(); circlePath.addCircle(cx,cy,cellW*0.44f, Path.Direction.CW);
+                      canvas.save(); canvas.clipPath(circlePath);
+                      canvas.drawBitmap(jajanBmp[grid[r][cc]], null, new RectF(x+2,y+2,x+cellW-2,y+cellH-2), null);
+                      canvas.restore();
                     }
                   }
                   Paint pp=new Paint(Paint.ANTI_ALIAS_FLAG); pp.setColor(Color.YELLOW);
@@ -197,8 +198,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 14
-                  versionName "12.0 Wood Fusion"
+                  versionCode 15
+                  versionName "13.0 Wood Same + Clip Hitam"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -228,5 +229,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-v12-wood-fusion
+          name: jajan-crush-v13-wood-sama-persis
           path: app/build/outputs/apk/debug/app-debug.apk
