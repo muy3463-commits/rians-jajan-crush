@@ -6,43 +6,46 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-            - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-            - name: Siapkan
+
+      - name: Siapkan File
         run: |
-          mkdir -p app/src/main/res/drawable app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/java/com/rians/jajancrush
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+          mkdir -p app/src/main/java/com/rians/jajancrush
           cp bg_desa.png app/src/main/res/drawable/bg_desa.png
-          for i in 1 2 3 4 5 6; do if [ -f "jajan0${i}.png" ]; then cp "jajan0${i}.png" "app/src/main/res/drawable/jajan$((i-1)).png"; fi; done
-          python3 -c "
-          from PIL import Image
-          import os, shutil
-          # bikin icon dari background polos ini
-          try:
-            bg=Image.open('bg_desa.png').convert('RGBA')
-            w,h=bg.size
-            icon=bg.crop((0,0,w,int(h*0.32))).resize((512,512), Image.LANCZOS)
-            icon.save('icon.png')
-          except:
-            Image.new('RGBA',(512,512),(139,69,19,255)).save('icon.png')
-          for d in ['hdpi','mdpi','xhdpi','xxhdpi']:
-            shutil.copy('icon.png', f'app/src/main/res/mipmap-{d}/ic_launcher.png')
-            shutil.copy('icon.png', f'app/src/main/res/mipmap-{d}/ic_launcher_round.png')
-          "
+          cp jajan01.png app/src/main/res/drawable/jajan0.png 2>/dev/null || true
+          cp jajan02.png app/src/main/res/drawable/jajan1.png 2>/dev/null || true
+          cp jajan03.png app/src/main/res/drawable/jajan2.png 2>/dev/null || true
+          cp jajan04.png app/src/main/res/drawable/jajan3.png 2>/dev/null || true
+          cp jajan05.png app/src/main/res/drawable/jajan4.png 2>/dev/null || true
+          cp jajan06.png app/src/main/res/drawable/jajan5.png 2>/dev/null || true
+          if [ -f icon.png ]; then cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png; else cp bg_desa.png app/src/main/res/mipmap-hdpi/ic_launcher.png; fi
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
           printf 'include ":app"\n' > settings.gradle
           printf 'buildscript { repositories { google(); mavenCentral(); gradlePluginPortal(); } dependencies { classpath "com.android.tools.build:gradle:8.1.0" } }\nallprojects { repositories { google(); mavenCentral(); } }\n' > build.gradle
-          printf 'apply plugin: "com.android.application"\nandroid { namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 77; versionName "77.0" }\n}\n' > app/build.gradle
-          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-            - name: Java Tombol Pencet
+          printf 'apply plugin: "com.android.application"\nandroid { namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 78; versionName "78.0" }\n}\n' > app/build.gradle
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+
+      - name: Tulis Java Tombol Pencet
         run: |
-          cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'EOF'
+          cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA_EOF'
           package com.rians.jajancrush;
-          import android.app.Activity; import android.os.Bundle; import android.content.Context; import android.graphics.*; import android.view.*; import android.widget.Toast; import java.util.*;
+          import android.app.Activity; import android.os.Bundle; import android.content.Context;
+          import android.graphics.*; import android.view.*; import android.widget.Toast; import java.util.*;
           public class MainActivity extends Activity {
           protected void onCreate(Bundle b){ super.onCreate(b); setContentView(new GameView(this)); }
           class GameView extends View {
@@ -55,49 +58,21 @@ jobs:
           void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; do{ t=rnd.nextInt(6); grid[r][cc]=t; }while(isMatch(r,cc)); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
           void ensureBoard(){ if(cellW>0) return; int w=getWidth(), h=getHeight(); if(w==0||h==0) return; gridX=w*0.06f; gridY=h*0.385f; float gw=w*0.88f; float gh=h*0.585f; cellW=gw/COLS; cellH=gh/ROWS; float bw=w*0.28f, bh=h*0.068f, by=h*0.305f; btnLevel=new RectF(w*0.05f, by, w*0.05f+bw, by+bh); btnScore=new RectF(w*0.36f, by, w*0.36f+bw, by+bh); btnMoves=new RectF(w*0.67f, by, w*0.67f+bw, by+bh); }
-          protected void onDraw(Canvas canvas){
-            ensureBoard(); if(bg!=null) canvas.drawBitmap(bg,null,new Rect(0,0,getWidth(),getHeight()),null); else canvas.drawColor(Color.parseColor("#5D4037")); if(cellW==0) return;
-            // Gambar 3 tombol yang bisa dipencet
-            Paint btnBg=new Paint(Paint.ANTI_ALIAS_FLAG); btnBg.setColor(Color.parseColor("#3E2723"));
-            Paint btnBorder=new Paint(Paint.ANTI_ALIAS_FLAG); btnBorder.setColor(Color.parseColor("#FFD700")); btnBorder.setStyle(Paint.Style.STROKE); btnBorder.setStrokeWidth(4);
-            Paint label=new Paint(Paint.ANTI_ALIAS_FLAG); label.setColor(Color.parseColor("#FFD54F")); label.setTextAlign(Paint.Align.CENTER); label.setFakeBoldText(true); label.setTextSize(getWidth()*0.032f);
-            Paint value=new Paint(Paint.ANTI_ALIAS_FLAG); value.setColor(Color.WHITE); value.setTextAlign(Paint.Align.CENTER); value.setFakeBoldText(true); value.setTextSize(getWidth()*0.06f);
-            value.setShadowLayer(3,2,2,Color.BLACK);
-            RectF[] btns={btnLevel, btnScore, btnMoves}; String[] labs={"LEVEL","SCORE","MOVES"}; String[] vals={""+level, ""+score, ""+moves};
-            for(int i=0;i<3;i++){ RectF b=btns[i]; canvas.drawRoundRect(b, 18,18, btnBg); canvas.drawRoundRect(b, 18,18, btnBorder); canvas.drawText(labs[i], b.centerX(), b.top+22, label); canvas.drawText(vals[i], b.centerX(), b.centerY()+18, value); }
-            // Grid
-            Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFF8E1")); cellBg.setAlpha(235);
-            Paint cellBd=new Paint(Paint.ANTI_ALIAS_FLAG); cellBd.setColor(Color.parseColor("#8D6E63")); cellBd.setStyle(Paint.Style.STROKE); cellBd.setStrokeWidth(2);
-            for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+4, t=gridY+r*cellH+4, rr=gridX+(c+1)*cellW-4, b=gridY+(r+1)*cellH-4; RectF rf=new RectF(l,t,rr,b); canvas.drawRoundRect(rf, 16,16, cellBg); canvas.drawRoundRect(rf,16,16,cellBd); int type=grid[r][c]; if(jajans[type]!=null){ RectF icon=new RectF(l+6,t+6,rr-6,b-6); canvas.drawBitmap(jajans[type], null, icon, null); } else { Paint f=new Paint(); int[] cols={0xFFFF7043,0xFF66BB6A,0xFF42A5F5,0xFFFFCA28,0xFFAB47BC,0xFF26C6DA}; f.setColor(cols[type%6]); canvas.drawRoundRect(new RectF(l+10,t+10,rr-10,b-10),12,12,f); } }
-            if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180); canvas.drawRect(0,0,getWidth(),getHeight(),over); value.setTextSize(60); value.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, value); value.setTextSize(28); value.setColor(Color.WHITE); canvas.drawText("Tap untuk ulang", getWidth()/2f, getHeight()/2f+60, value); }
-          }
-          public boolean onTouchEvent(MotionEvent e){
-            if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; }
-            if(e.getAction()==MotionEvent.ACTION_UP){
-              float x=e.getX(), y=e.getY();
-              // Cek tombol dulu
-              if(btnLevel!=null && btnLevel.contains(x,y)){ level++; if(level>10) level=1; score=0; moves=30; initGrid(); Toast.makeText(getContext(), "Level "+level, Toast.LENGTH_SHORT).show(); invalidate(); return true; }
-              if(btnScore!=null && btnScore.contains(x,y)){ Toast.makeText(getContext(), "Score: "+score+" | Level: "+level, Toast.LENGTH_SHORT).show(); return true; }
-              if(btnMoves!=null && btnMoves.contains(x,y)){ Toast.makeText(getContext(), "Sisa gerakan: "+moves, Toast.LENGTH_SHORT).show(); return true; }
-              if(moves<=0){ score=0; moves=30; level=1; initGrid(); invalidate(); return true; }
-              float dx=x-downX, dy=y-downY;
-              int c=(int)((downX-gridX)/cellW); int r=(int)((downY-gridY)/cellH); if(r<0||r>=ROWS||c<0||c>=COLS) return true;
-              int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cellW*0.3f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cellH*0.3f) nr=r+(dy>0?1:-1); }
-              if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true;
-              int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; } invalidate(); return true;
-            } return true;
-          }
+          protected void onDraw(Canvas canvas){ ensureBoard(); if(bg!=null) canvas.drawBitmap(bg,null,new Rect(0,0,getWidth(),getHeight()),null); else canvas.drawColor(Color.parseColor("#5D4037")); if(cellW==0) return; Paint btnBg=new Paint(Paint.ANTI_ALIAS_FLAG); btnBg.setColor(Color.parseColor("#3E2723")); Paint btnBorder=new Paint(Paint.ANTI_ALIAS_FLAG); btnBorder.setColor(Color.parseColor("#FFD700")); btnBorder.setStyle(Paint.Style.STROKE); btnBorder.setStrokeWidth(4); Paint label=new Paint(Paint.ANTI_ALIAS_FLAG); label.setColor(Color.parseColor("#FFD54F")); label.setTextAlign(Paint.Align.CENTER); label.setFakeBoldText(true); label.setTextSize(getWidth()*0.032f); Paint value=new Paint(Paint.ANTI_ALIAS_FLAG); value.setColor(Color.WHITE); value.setTextAlign(Paint.Align.CENTER); value.setFakeBoldText(true); value.setTextSize(getWidth()*0.06f); value.setShadowLayer(3,2,2,Color.BLACK); RectF[] btns={btnLevel, btnScore, btnMoves}; String[] labs={"LEVEL","SCORE","MOVES"}; String[] vals={""+level, ""+score, ""+moves}; for(int i=0;i<3;i++){ RectF b=btns[i]; canvas.drawRoundRect(b, 18,18, btnBg); canvas.drawRoundRect(b, 18,18, btnBorder); canvas.drawText(labs[i], b.centerX(), b.top+22, label); canvas.drawText(vals[i], b.centerX(), b.centerY()+18, value); } Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFF8E1")); cellBg.setAlpha(235); Paint cellBd=new Paint(Paint.ANTI_ALIAS_FLAG); cellBd.setColor(Color.parseColor("#8D6E63")); cellBd.setStyle(Paint.Style.STROKE); cellBd.setStrokeWidth(2); for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+4, t=gridY+r*cellH+4, rr=gridX+(c+1)*cellW-4, b=gridY+(r+1)*cellH-4; RectF rf=new RectF(l,t,rr,b); canvas.drawRoundRect(rf, 16,16, cellBg); canvas.drawRoundRect(rf,16,16,cellBd); int type=grid[r][c]; if(jajans[type]!=null){ RectF icon=new RectF(l+6,t+6,rr-6,b-6); canvas.drawBitmap(jajans[type], null, icon, null); } } if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180); canvas.drawRect(0,0,getWidth(),getHeight(),over); value.setTextSize(60); value.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, value); value.setTextSize(28); value.setColor(Color.WHITE); canvas.drawText("Tap untuk ulang", getWidth()/2f, getHeight()/2f+60, value); } }
+          public boolean onTouchEvent(MotionEvent e){ if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; } if(e.getAction()==MotionEvent.ACTION_UP){ float x=e.getX(), y=e.getY(); if(btnLevel!=null && btnLevel.contains(x,y)){ level++; if(level>10) level=1; score=0; moves=30; initGrid(); Toast.makeText(getContext(), "Level "+level, Toast.LENGTH_SHORT).show(); invalidate(); return true; } if(btnScore!=null && btnScore.contains(x,y)){ Toast.makeText(getContext(), "Score: "+score+" Level: "+level, Toast.LENGTH_SHORT).show(); return true; } if(btnMoves!=null && btnMoves.contains(x,y)){ Toast.makeText(getContext(), "Sisa: "+moves, Toast.LENGTH_SHORT).show(); return true; } if(moves<=0){ score=0; moves=30; level=1; initGrid(); invalidate(); return true; } float dx=x-downX, dy=y-downY; int c=(int)((downX-gridX)/cellW); int r=(int)((downY-gridY)/cellH); if(r<0||r>=ROWS||c<0||c>=COLS) return true; int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cellW*0.3f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cellH*0.3f) nr=r+(dy>0?1:-1); } if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true; int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; } invalidate(); return true; } return true; }
           boolean check(){ boolean[][] mark=new boolean[ROWS][COLS]; boolean found=false; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS-2;cc++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r][cc+1]==t&&grid[r][cc+2]==t){ int k=cc; while(k<COLS&&grid[r][k]==t){ mark[r][k]=true; k++; found=true; } } } for(int cc=0;cc<COLS;cc++) for(int r=0;r<ROWS-2;r++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r+1][cc]==t&&grid[r+2][cc]==t){ int k=r; while(k<ROWS&&grid[k][cc]==t){ mark[k][cc]=true; k++; found=true; } } } if(!found) return false; int cnt=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(mark[r][cc]){ grid[r][cc]=-1; cnt++; } score+=cnt*20; drop(); postDelayed(new Runnable(){ public void run(){ if(check()) invalidate(); }}, 200); return true; }
           void drop(){ for(int cc=0;cc<COLS;cc++){ int wri=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[wri][cc]=grid[r][cc]; wri--; } for(int r=wri;r>=0;r--) grid[r][cc]=rnd.nextInt(6); } }
           } }
-          EOF
-            - name: Build
+          JAVA_EOF
+
+      - name: Build APK
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
           ./gradle-8.0/bin/gradle assembleDebug --no-daemon
-            - name: Upload
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-77-TOMBOL-PENCET
+          name: Jajan-Crush-78-FIX-YAML
           path: app/build/outputs/apk/debug/*.apk
