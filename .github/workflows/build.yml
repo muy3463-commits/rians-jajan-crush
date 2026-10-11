@@ -17,20 +17,18 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/mipmap-hdpi
           mkdir -p app/src/main/java/com/rians/jajancrush
-          cp bg_desa.png app/src/main/res/drawable/bg_desa.png 2>/dev/null || echo "bg not found, skip"
-          cp jajan01.png app/src/main/res/drawable/jajan0.png 2>/dev/null || true
-          cp jajan02.png app/src/main/res/drawable/jajan1.png 2>/dev/null || true
-          cp jajan03.png app/src/main/res/drawable/jajan2.png 2>/dev/null || true
-          cp jajan04.png app/src/main/res/drawable/jajan3.png 2>/dev/null || true
-          cp jajan05.png app/src/main/res/drawable/jajan4.png 2>/dev/null || true
-          cp jajan06.png app/src/main/res/drawable/jajan5.png 2>/dev/null || true
-          ls -R
-          echo "dummy" > app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp bg_desa.png app/src/main/res/drawable/bg_desa.png
+          cp jajan01.png app/src/main/res/drawable/jajan0.png
+          cp jajan02.png app/src/main/res/drawable/jajan1.png
+          cp jajan03.png app/src/main/res/drawable/jajan2.png
+          cp jajan04.png app/src/main/res/drawable/jajan3.png
+          cp jajan05.png app/src/main/res/drawable/jajan4.png
+          cp jajan06.png app/src/main/res/drawable/jajan5.png
+          cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           printf 'include ":app"\n' > settings.gradle
-          echo 'buildscript { repositories { google(); mavenCentral(); gradlePluginPortal() } dependencies { classpath "com.android.tools.build:gradle:8.1.0" } } allprojects { repositories { google(); mavenCentral() } }' > build.gradle
-          echo 'apply plugin: "com.android.application"' > app/build.gradle
-          echo 'android { namespace "com.rians.jajancrush"; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 68; versionName "68.0" } }' >> app/build.gradle
+          printf 'buildscript {\n repositories {\n google()\n mavenCentral()\n gradlePluginPortal()\n }\n dependencies {\n classpath "com.android.tools.build:gradle:8.1.0"\n }\n}\nallprojects {\n repositories {\n google()\n mavenCentral()\n }\n}\n' > build.gradle
+          printf 'apply plugin: "com.android.application"\nandroid {\n namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 70; versionName "70.0" }\n}\n' > app/build.gradle
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
 
       - name: Tulis Java
@@ -64,5 +62,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-68-FIXED
+          name: Jajan-Crush-70-IJO
           path: app/build/outputs/apk/debug/*.apk
