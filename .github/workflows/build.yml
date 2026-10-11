@@ -98,34 +98,20 @@ jobs:
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush V5" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
           MANIFEST
-          mkdir -p gradle/wrapper
           cat > settings.gradle << 'SET'
           include ':app'
           SET
           cat > build.gradle << 'B'
           buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.0' } } allprojects { repositories { google(); mavenCentral() } }
           B
-          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          cat > gradlew << 'GW'
-          #!/bin/sh
-          set -e
-          GRADLE_URL="https://services.gradle.org/distributions/gradle-8.4-bin.zip"
-          DIST_DIR="$HOME/.gradle/wrapper/dists/gradle-8.4-bin"
-          BIN_DIR="$DIST_DIR/gradle-8.4/bin"
-          if [! -f "$BIN_DIR/gradle" ]; then
-            mkdir -p /tmp/gdl
-            cd /tmp/gdl
-            rm -rf gradle-8.4 gradle-8.4-bin.zip
-            wget -q "$GRADLE_URL" -O gradle-8.4-bin.zip
-            unzip -q gradle-8.4-bin.zip
-            mkdir -p "$DIST_DIR"
-            mv gradle-8.4/* "$DIST_DIR"/
-          fi
-          exec "$BIN_DIR/gradle" "$@"
-          GW
-          chmod +x gradlew
-      - name: Build APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build APK - FIX NO GRADLEW
+        run: |
+          cd /tmp
+          wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip
+          unzip -q gradle-8.4-bin.zip
+          export PATH=/tmp/gradle-8.4/bin:$PATH
+          cd $GITHUB_WORKSPACE
+          gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
