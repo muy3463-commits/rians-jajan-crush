@@ -128,7 +128,7 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
-         ./gradle-8.0/bin/gradle assembleDebug --no-daemon
+          ./gradle-8.0/bin/gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
