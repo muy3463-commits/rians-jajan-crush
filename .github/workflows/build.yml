@@ -92,19 +92,46 @@ jobs:
           JAVAEOF
           cat > app/build.gradle << 'GRADLE'
           plugins { id 'com.android.application' }
-          android { namespace 'com.rians.jajancrush'; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 5; versionName "5.0 Jackpot Rumit" } buildTypes { release { minifyEnabled false } } }
+          android {
+              namespace 'com.rians.jajancrush'
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.rians.jajancrush"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 5
+                  versionName "5.0 Jackpot Rumit"
+              }
+              buildTypes {
+                  release { minifyEnabled false }
+              }
+          }
           dependencies {}
           GRADLE
-          cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush V5" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
-          MANIFEST
+          cat > build.gradle << 'B'
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.2.0'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          B
           cat > settings.gradle << 'SET'
           include ':app'
           SET
-          cat > build.gradle << 'B'
-          buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.0' } } allprojects { repositories { google(); mavenCentral() } }
-          B
-      - name: Build APK - FIX NO GRADLEW
+          cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush V5" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          MANIFEST
+      - name: Build APK - FINAL FIX
         run: |
           cd /tmp
           wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip
