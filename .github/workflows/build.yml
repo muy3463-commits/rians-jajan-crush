@@ -13,13 +13,7 @@ jobs:
           java-version: '17'
       - name: Siapkan Project
         run: |
-          mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/raw
-          mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
-          mkdir -p app/src/main/java/com/rians/jajancrush
+          mkdir -p app/src/main/res/drawable app/src/main/res/raw app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/java/com/rians/jajancrush
           cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan01.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan02.png app/src/main/res/drawable/ 2>/dev/null || true
@@ -115,16 +109,15 @@ jobs:
           cat > gradlew << 'GW'
           #!/bin/sh
           set -e
-          GRADLE_ZIP="gradle-8.4-bin.zip"
-          GRADLE_URL="https://services.gradle.org/distributions/$GRADLE_ZIP"
+          GRADLE_URL="https://services.gradle.org/distributions/gradle-8.4-bin.zip"
           DIST_DIR="$HOME/.gradle/wrapper/dists/gradle-8.4-bin"
           BIN_DIR="$DIST_DIR/gradle-8.4/bin"
           if [! -f "$BIN_DIR/gradle" ]; then
-            mkdir -p "$DIST_DIR"
-            cd /tmp
-            rm -rf gradle-8.4 "$GRADLE_ZIP"
-            wget -q "$GRADLE_URL" -O "$GRADLE_ZIP"
-            unzip -q "$GRADLE_ZIP"
+            mkdir -p /tmp/gdl
+            cd /tmp/gdl
+            rm -rf gradle-8.4 gradle-8.4-bin.zip
+            wget -q "$GRADLE_URL" -O gradle-8.4-bin.zip
+            unzip -q gradle-8.4-bin.zip
             mkdir -p "$DIST_DIR"
             mv gradle-8.4/* "$DIST_DIR"/
           fi
