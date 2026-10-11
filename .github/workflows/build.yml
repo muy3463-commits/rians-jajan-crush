@@ -12,14 +12,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Siapkan File
+      - name: Siapkan Project
         run: |
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
           mkdir -p app/src/main/java/com/rians/jajancrush
+
           cp bg_desa.png app/src/main/res/drawable/bg_desa.png
           cp jajan01.png app/src/main/res/drawable/jajan0.png 2>/dev/null || true
           cp jajan02.png app/src/main/res/drawable/jajan1.png 2>/dev/null || true
@@ -27,7 +25,12 @@ jobs:
           cp jajan04.png app/src/main/res/drawable/jajan3.png 2>/dev/null || true
           cp jajan05.png app/src/main/res/drawable/jajan4.png 2>/dev/null || true
           cp jajan06.png app/src/main/res/drawable/jajan5.png 2>/dev/null || true
-          if [ -f icon.png ]; then cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png; else cp bg_desa.png app/src/main/res/mipmap-hdpi/ic_launcher.png; fi
+
+          if [ -f icon.png ]; then
+            cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png
+          else
+            cp bg_desa.png app/src/main/res/mipmap-hdpi/ic_launcher.png
+          fi
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
@@ -35,9 +38,47 @@ jobs:
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-          printf 'include ":app"\n' > settings.gradle
-          printf 'buildscript { repositories { google(); mavenCentral(); gradlePluginPortal(); } dependencies { classpath "com.android.tools.build:gradle:8.1.0" } }\nallprojects { repositories { google(); mavenCentral(); } }\n' > build.gradle
-          printf 'apply plugin: "com.android.application"\nandroid { namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 78; versionName "78.0" }\n}\n' > app/build.gradle
+
+          # FIX UTAMA - build.gradle yang baru kompatibel Gradle 8
+          cat > settings.gradle << 'GRD'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          include ":app"
+          GRD
+
+          cat > build.gradle << 'GRD'
+          // Top-level build file - kosongin aja buat Gradle 8
+          GRD
+
+          cat > app/build.gradle << 'GRD'
+          plugins {
+              id 'com.android.application' version '8.1.0' apply true
+          }
+          android {
+              namespace "com.rians.jajancrush"
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.rians.jajancrush"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 79
+                  versionName "79.0"
+              }
+          }
+          GRD
+
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
 
       - name: Tulis Java Tombol Pencet
@@ -74,5 +115,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-78-FIX-YAML
+          name: Jajan-Crush-79-FIXED
           path: app/build/outputs/apk/debug/*.apk
