@@ -50,20 +50,16 @@ jobs:
               float cellW, cellH, gridX, gridY;
               RectF btnLevel, btnScore, btnMoves, btnMute;
               int level=1, score=0, moves=0;
-              int selR=-1, selC=-1;
               float downX, downY; int downR, downC;
               Bitmap[] jajanBmp=new Bitmap[6]; Bitmap bg;
               ArrayList<Particle> parts=new ArrayList<>();
               int complexity=0; boolean jackpotReady=false; int jackpotR=-1, jackpotC=-1; int jackpotAnim=0; boolean showJackpotPopup=false; int jackpotPopupAnim=0;
               int getTarget(){ if(level==1) return 1000; if(level==2) return 2500; return 4000; }
               int getMovesForLevel(int lvl){ if(lvl==1) return 20; if(lvl==2) return 25; return 30; }
-              void saveProgress(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.putInt("score",score); ed.apply(); }catch(Exception e){} }
+              void saveProgress(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.apply(); }catch(Exception e){} }
               void loadProgress(){ try{ level=prefs.getInt("level",1); }catch(Exception e){} }
               Bitmap safe(int id){ try{ return BitmapFactory.decodeResource(getResources(),id); }catch(Exception e){ return null; } }
-              public GameView(Context c){
-                super(c); loadProgress(); moves=getMovesForLevel(level);
-                try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bg=safe(bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName()); if(id!=0) jajanBmp[i]=safe(id); } }catch(Exception e){}
-              }
+              public GameView(Context c){ super(c); loadProgress(); moves=getMovesForLevel(level); try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bg=safe(bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName()); if(id!=0) jajanBmp[i]=safe(id); } }catch(Exception e){} }
               void toggleMute(){ try{ isMuted=!isMuted; prefs.edit().putBoolean("mute",isMuted).apply(); if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); } else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); } }catch(Exception e){} }
               void spawnParticles(float cx,float cy){ for(int i=0;i<15;i++){ Particle p=new Particle(); p.x=cx; p.y=cy; p.vx=(float)(Math.random()*10-5); p.vy=(float)(Math.random()*-10-2); p.r=(float)(Math.random()*8+4); p.alpha=255; p.color=Color.YELLOW; parts.add(p); } }
               void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) grid[r][cc]=(int)(Math.random()*6); complexity=0; }
@@ -77,19 +73,16 @@ jobs:
                 return false;
               }
               protected void onDraw(Canvas canvas){
-                if(cellW==0 || gridX==0){ int w=getWidth(), h=getHeight(); if(w==0||h==0) return; gridX=w*0.06f; gridY=h*0.30f; cellW=(w-gridX*2)/COLS; cellH=cellW; float bw=w*0.28f, bh=h*0.065f; float bwSmall=w*0.22f, bhSmall=h*0.055f; float muteSize=w*0.11f; btnLevel=new RectF(w*0.06f, h*0.04f, w*0.06f+bw, h*0.04f+bh); btnScore=new RectF(w*0.94f-bw, h*0.04f, w*0.94f, h*0.04f+bh); btnMoves=new RectF(w*0.06f, h*0.125f, w*0.06f+bwSmall, h*0.125f+bhSmall); btnMute=new RectF(w*0.94f-muteSize-w*0.06f, h*0.125f, w*0.94f-w*0.06f, h*0.125f+muteSize); initGrid(); }
+                if(cellW==0){ int w=getWidth(), h=getHeight(); if(w==0||h==0) return; gridX=w*0.06f; gridY=h*0.30f; cellW=(w-gridX*2)/COLS; cellH=cellW; float bw=w*0.28f, bh=h*0.065f; float bwSmall=w*0.22f, bhSmall=h*0.055f; float muteSize=w*0.11f; btnLevel=new RectF(w*0.06f, h*0.04f, w*0.06f+bw, h*0.04f+bh); btnScore=new RectF(w*0.94f-bw, h*0.04f, w*0.94f, h*0.04f+bh); btnMoves=new RectF(w*0.06f, h*0.125f, w*0.06f+bwSmall, h*0.125f+bhSmall); btnMute=new RectF(w*0.94f-muteSize-w*0.06f, h*0.125f, w*0.94f-w*0.06f, h*0.125f+muteSize); initGrid(); }
                 if(bg!=null) canvas.drawBitmap(bg,null,new Rect(0,0,getWidth(),getHeight()),null); else { canvas.drawColor(Color.parseColor("#FFF8E1")); }
-                Paint btnBg=new Paint(Paint.ANTI_ALIAS_FLAG); btnBg.setColor(Color.parseColor("#FF9800"));
-                Paint btnBd=new Paint(Paint.ANTI_ALIAS_FLAG); btnBd.setStyle(Paint.Style.STROKE); btnBd.setStrokeWidth(3); btnBd.setColor(Color.WHITE);
-                Paint val=new Paint(Paint.ANTI_ALIAS_FLAG); val.setColor(Color.WHITE); val.setFakeBoldText(true); val.setTextAlign(Paint.Align.CENTER);
-                Paint lab=new Paint(Paint.ANTI_ALIAS_FLAG); lab.setColor(Color.WHITE); lab.setTextAlign(Paint.Align.CENTER); lab.setFakeBoldText(true);
+                Paint btnBg=new Paint(Paint.ANTI_ALIAS_FLAG); btnBg.setColor(Color.parseColor("#FF9800")); Paint btnBd=new Paint(Paint.ANTI_ALIAS_FLAG); btnBd.setStyle(Paint.Style.STROKE); btnBd.setStrokeWidth(3); btnBd.setColor(Color.WHITE);
+                Paint val=new Paint(Paint.ANTI_ALIAS_FLAG); val.setColor(Color.WHITE); val.setFakeBoldText(true); val.setTextAlign(Paint.Align.CENTER); Paint lab=new Paint(Paint.ANTI_ALIAS_FLAG); lab.setColor(Color.WHITE); lab.setTextAlign(Paint.Align.CENTER); lab.setFakeBoldText(true);
                 RectF[] btns={btnLevel, btnMoves, btnScore}; String[] labs={"LEVEL","MOVES","SCORE"}; int[] vals={level,moves,score};
                 for(int i=0;i<3;i++){ RectF b=btns[i]; if(b==null) continue; canvas.drawRoundRect(b,20,20,btnBg); canvas.drawRoundRect(b,20,20,btnBd); val.setTextSize(i==1?36:44); canvas.drawText(String.valueOf(vals[i]), b.centerX(), b.centerY()+12, val); lab.setTextSize(18); canvas.drawText(labs[i], b.centerX(), b.top-10, lab); }
                 if(btnMute!=null){ Paint mBg=new Paint(Paint.ANTI_ALIAS_FLAG); mBg.setColor(isMuted?Color.GRAY:Color.parseColor("#4CAF50")); canvas.drawRoundRect(btnMute,18,18,mBg); lab.setTextSize(28); canvas.drawText(isMuted?"🔇":"🔊", btnMute.centerX(), btnMute.centerY()+10, lab); }
                 Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFFFFFCC")); Paint cellBd=new Paint(Paint.ANTI_ALIAS_FLAG); cellBd.setStyle(Paint.Style.STROKE); cellBd.setColor(Color.WHITE);
                 for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ float x=gridX+cc*cellW, y=gridY+r*cellH; RectF rf=new RectF(x+2,y+2,x+cellW-2,y+cellH-2); canvas.drawRoundRect(rf,16,16,cellBg); canvas.drawRoundRect(rf,16,16,cellBd); if(jackpotReady && r==jackpotR && cc==jackpotC){ Paint gold=new Paint(Paint.ANTI_ALIAS_FLAG); gold.setColor(Color.YELLOW); gold.setAlpha(120+ (jackpotAnim%80)); jackpotAnim+=4; canvas.drawCircle(x+cellW/2, y+cellH/2, cellW*0.55f, gold); Paint qp=new Paint(); qp.setColor(Color.BLACK); qp.setTextSize(36); qp.setTextAlign(Paint.Align.CENTER); qp.setFakeBoldText(true); canvas.drawText("?", x+cellW/2, y+cellH/2+12, qp); } if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanBmp[grid[r][cc]]!=null){ canvas.drawBitmap(jajanBmp[grid[r][cc]], null, rf, null); } }
-                Paint pPart=new Paint(Paint.ANTI_ALIAS_FLAG);
-                for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.5f; p.alpha-=8; if(p.alpha<=0) parts.remove(i); else { pPart.setColor(p.color); pPart.setAlpha((int)p.alpha); canvas.drawCircle(p.x,p.y,p.r,pPart); } }
+                Paint pPart=new Paint(Paint.ANTI_ALIAS_FLAG); for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.5f; p.alpha-=8; if(p.alpha<=0) parts.remove(i); else { pPart.setColor(p.color); pPart.setAlpha((int)p.alpha); canvas.drawCircle(p.x,p.y,p.r,pPart); } }
                 if(parts.size()>0 || jackpotReady) postInvalidateDelayed(50);
                 if(moves<=0 && score < getTarget()){ Paint over=new Paint(); over.setColor(Color.parseColor("#CC000000")); canvas.drawRect(0,0,getWidth(),getHeight(),over); val.setTextSize(44); val.setColor(Color.WHITE); canvas.drawText("GAME OVER", getWidth()/2, getHeight()/2-20, val); lab.setTextSize(20); canvas.drawText("Tap untuk ulang", getWidth()/2, getHeight()/2+30, lab); }
                 else if(score >= getTarget()){ Paint over=new Paint(); over.setColor(Color.parseColor("#CC4CAF50")); canvas.drawRect(0,0,getWidth(),getHeight(),over); val.setTextSize(42); val.setColor(Color.WHITE); canvas.drawText("LEVEL "+level+" CLEAR!", getWidth()/2, getHeight()/2-20, val); lab.setTextSize(18); canvas.drawText("Tap untuk lanjut", getWidth()/2, getHeight()/2+30, lab); }
@@ -121,9 +114,21 @@ jobs:
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           cat > gradlew << 'GW'
           #!/bin/sh
-          GRADLE_DIR="$HOME/.gradle/wrapper/dists/gradle-8.4-bin"
-          if [! -d "$GRADLE_DIR" ]; then mkdir -p /tmp/gdl; cd /tmp/gdl; wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O gradle.zip; unzip -q gradle.zip; mkdir -p "$GRADLE_DIR"; cp -r gradle-8.4/* "$GRADLE_DIR"/; fi
-          exec $GRADLE_DIR/bin/gradle "$@"
+          set -e
+          GRADLE_ZIP="gradle-8.4-bin.zip"
+          GRADLE_URL="https://services.gradle.org/distributions/$GRADLE_ZIP"
+          DIST_DIR="$HOME/.gradle/wrapper/dists/gradle-8.4-bin"
+          BIN_DIR="$DIST_DIR/gradle-8.4/bin"
+          if [! -f "$BIN_DIR/gradle" ]; then
+            mkdir -p "$DIST_DIR"
+            cd /tmp
+            rm -rf gradle-8.4 "$GRADLE_ZIP"
+            wget -q "$GRADLE_URL" -O "$GRADLE_ZIP"
+            unzip -q "$GRADLE_ZIP"
+            mkdir -p "$DIST_DIR"
+            mv gradle-8.4/* "$DIST_DIR"/
+          fi
+          exec "$BIN_DIR/gradle" "$@"
           GW
           chmod +x gradlew
       - name: Build APK
