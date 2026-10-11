@@ -24,11 +24,11 @@ jobs:
           cp jajan04.png app/src/main/res/drawable/jajan3.png
           cp jajan05.png app/src/main/res/drawable/jajan4.png
           cp jajan06.png app/src/main/res/drawable/jajan5.png
-          cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || echo "x" > app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           printf 'include ":app"\n' > settings.gradle
           printf 'buildscript {\n repositories {\n google()\n mavenCentral()\n gradlePluginPortal()\n }\n dependencies {\n classpath "com.android.tools.build:gradle:8.1.0"\n }\n}\nallprojects {\n repositories {\n google()\n mavenCentral()\n }\n}\n' > build.gradle
-          printf 'apply plugin: "com.android.application"\nandroid {\n namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 70; versionName "70.0" }\n}\n' > app/build.gradle
+          printf 'apply plugin: "com.android.application"\nandroid {\n namespace "com.rians.jajancrush"\n compileSdk 34\n defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 72; versionName "72.0" }\n}\n' > app/build.gradle
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
 
       - name: Tulis Java
@@ -39,16 +39,76 @@ jobs:
           public class MainActivity extends Activity {
           protected void onCreate(Bundle b){ super.onCreate(b); setContentView(new GameView(this)); }
           class GameView extends View {
-          int ROWS=6, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=500, moves=30; Random rnd=new Random();
+          int ROWS=7, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=0, moves=30, level=1; Random rnd=new Random();
           float cellW, cellH, gridX, gridY, downX, downY; Bitmap bgBitmap; Bitmap[] jajans=new Bitmap[6];
-          Bitmap safe(int id){ try{ BitmapFactory.Options o=new BitmapFactory.Options(); o.inSampleSize=2; return BitmapFactory.decodeResource(getResources(), id, o); }catch(Exception e){return null;} }
+          Bitmap safe(int id){ try{ BitmapFactory.Options o=new BitmapFactory.Options(); o.inSampleSize=1; return BitmapFactory.decodeResource(getResources(), id, o); }catch(Exception e){return null;} }
           public GameView(Context c){ super(c); try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bgBitmap=safe(bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan"+i,"drawable",getPackageName()); if(id!=0) jajans[i]=safe(id);} }catch(Exception e){} initGrid(); }
           void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; do{ t=rnd.nextInt(6); grid[r][cc]=t; }while(isMatch(r,cc)); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
-          void ensureBoard(){ if(cellW>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; gridX=w*0.138f; gridY=h*0.328f; float gridW=w*0.724f; float gridH=h*0.508f; cellW=gridW/COLS; cellH=gridH/ROWS; }
-          protected void onDraw(Canvas canvas){ ensureBoard(); if(bgBitmap!=null) canvas.drawBitmap(bgBitmap,null,new Rect(0,0,getWidth(),getHeight()),null); else canvas.drawColor(Color.parseColor("#A1887F")); if(cellW==0) return; for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+3, t=gridY+r*cellH+3, rr=gridX+(c+1)*cellW-3, b=gridY+(r+1)*cellH-3; RectF tile=new RectF(l,t,rr,b); int type=grid[r][c]; if(jajans[type]!=null) canvas.drawBitmap(jajans[type],null,tile,null); } Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG); txt.setColor(Color.WHITE); txt.setTextSize(36); txt.setFakeBoldText(true); txt.setTextAlign(Paint.Align.CENTER); txt.setShadowLayer(5,2,2,Color.BLACK); canvas.drawText("1", getWidth()*0.242f, getHeight()*0.288f, txt); canvas.drawText(""+score, getWidth()*0.495f, getHeight()*0.288f, txt); canvas.drawText(""+moves, getWidth()*0.738f, getHeight()*0.288f, txt); if(moves<=0){ Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180); canvas.drawRect(0,0,getWidth(),getHeight(),over); txt.setTextSize(50); txt.setColor(Color.YELLOW); canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, txt); } }
-          public boolean onTouchEvent(MotionEvent e){ if(moves<=0&&e.getAction()==MotionEvent.ACTION_UP){ score=500; moves=30; initGrid(); invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; } if(e.getAction()==MotionEvent.ACTION_UP){ float upX=e.getX(), upY=e.getY(); float dx=upX-downX, dy=upY-downY; int c=(int)((downX-gridX)/cellW); int r=(int)((downY-gridY)/cellH); if(r<0||r>=ROWS||c<0||c>=COLS) return true; int nr=r,nc=c; if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cellW*0.26f) nc=c+(dx>0?1:-1); } else { if(Math.abs(dy)>cellH*0.26f) nr=r+(dy>0?1:-1); } if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true; int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; } else { moves--; } invalidate(); return true; } return true; }
-          boolean check(){ boolean[][] mark=new boolean[ROWS][COLS]; boolean found=false; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS-2;cc++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r][cc+1]==t&&grid[r][cc+2]==t){ int k=cc; while(k<COLS&&grid[r][k]==t){ mark[r][k]=true; k++; found=true; } } } for(int cc=0;cc<COLS;cc++) for(int r=0;r<ROWS-2;r++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r+1][cc]==t&&grid[r+2][cc]==t){ int k=r; while(k<ROWS&&grid[k][cc]==t){ mark[k][cc]=true; k++; found=true; } } } if(!found) return false; int cnt=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(mark[r][cc]){ grid[r][cc]=-1; cnt++; } score+=cnt*40; drop(); postDelayed(new Runnable(){ public void run(){ if(check()) invalidate(); }}, 250); return true; }
+          void ensureBoard(){ if(cellW>0) return; int w=getWidth(); int h=getHeight(); if(w==0||h==0) return; gridX=w*0.074f; gridY=h*0.351f; float gridW=w*0.852f; float gridH=h*0.624f; cellW=gridW/COLS; cellH=gridH/ROWS; }
+          protected void onDraw(Canvas canvas){
+            ensureBoard();
+            if(bgBitmap!=null) canvas.drawBitmap(bgBitmap,null,new Rect(0,0,getWidth(),getHeight()),null); else canvas.drawColor(Color.parseColor("#8D6E63"));
+            if(cellW==0) return;
+            // Gambar jajan pas di kotak beige, hapus hitam dengan rounded clip
+            for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){
+              float l=gridX+c*cellW+6, t=gridY+r*cellH+6, rr=gridX+(c+1)*cellW-6, b=gridY+(r+1)*cellH-6;
+              RectF rf = new RectF(l,t,rr,b);
+              int type=grid[r][c];
+              if(jajans[type]!=null){
+                canvas.save();
+                Path path=new Path();
+                path.addRoundRect(rf, 22, 22, Path.Direction.CW);
+                canvas.clipPath(path);
+                canvas.drawBitmap(jajans[type], null, rf, null);
+                canvas.restore();
+              }
+            }
+            // Angka di 3 oval atas
+            float ovalY = getHeight()*0.313f;
+            float[] xs = {getWidth()*0.263f, getWidth()*0.5f, getWidth()*0.737f};
+            Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG);
+            txt.setColor(Color.parseColor("#5D4037")); txt.setTextSize(38);
+            txt.setFakeBoldText(true); txt.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText(""+level, xs[0], ovalY+12, txt);
+            canvas.drawText(""+score, xs[1], ovalY+12, txt);
+            canvas.drawText(""+moves, xs[2], ovalY+12, txt);
+            if(moves<=0){
+              Paint over=new Paint(); over.setColor(Color.BLACK); over.setAlpha(180);
+              canvas.drawRect(0,0,getWidth(),getHeight(),over);
+              txt.setColor(Color.YELLOW); txt.setTextSize(60);
+              canvas.drawText("GAME OVER", getWidth()/2f, getHeight()/2f, txt);
+              txt.setTextSize(28); txt.setColor(Color.WHITE);
+              canvas.drawText("Tap untuk ulang", getWidth()/2f, getHeight()/2f+60, txt);
+            }
+          }
+          public boolean onTouchEvent(MotionEvent e){
+            if(moves<=0&&e.getAction()==MotionEvent.ACTION_UP){ score=0; moves=30; level=1; initGrid(); invalidate(); return true; }
+            if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; }
+            if(e.getAction()==MotionEvent.ACTION_UP){
+              float upX=e.getX(), upY=e.getY(); float dx=upX-downX, dy=upY-downY;
+              int c=(int)((downX-gridX)/cellW); int r=(int)((downY-gridY)/cellH);
+              if(r<0||r>=ROWS||c<0||c>=COLS) return true;
+              int nr=r,nc=c;
+              if(Math.abs(dx)>Math.abs(dy)){ if(Math.abs(dx)>cellW*0.3f) nc=c+(dx>0?1:-1); }
+              else { if(Math.abs(dy)>cellH*0.3f) nr=r+(dy>0?1:-1); }
+              if(nr<0||nr>=ROWS||nc<0||nc>=COLS||(nr==r&&nc==c)) return true;
+              int tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp;
+              if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][nc]; grid[nr][nc]=tmp; }
+              else { moves--; }
+              invalidate(); return true;
+            } return true;
+          }
+          boolean check(){
+            boolean[][] mark=new boolean[ROWS][COLS]; boolean found=false;
+            for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS-2;cc++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r][cc+1]==t&&grid[r][cc+2]==t){ int k=cc; while(k<COLS&&grid[r][k]==t){ mark[r][k]=true; k++; found=true; } } }
+            for(int cc=0;cc<COLS;cc++) for(int r=0;r<ROWS-2;r++){ int t=grid[r][cc]; if(t==-1) continue; if(grid[r+1][cc]==t&&grid[r+2][cc]==t){ int k=r; while(k<ROWS&&grid[k][cc]==t){ mark[k][cc]=true; k++; found=true; } } }
+            if(!found) return false;
+            int cnt=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(mark[r][cc]){ grid[r][cc]=-1; cnt++; }
+            score+=cnt*20; drop();
+            postDelayed(new Runnable(){ public void run(){ if(check()) invalidate(); }}, 200);
+            return true;
+          }
           void drop(){ for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=rnd.nextInt(6); } }
           } }
           EOF
@@ -62,5 +122,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-70-IJO
+          name: Jajan-Crush-72-PERFECT
           path: app/build/outputs/apk/debug/*.apk
