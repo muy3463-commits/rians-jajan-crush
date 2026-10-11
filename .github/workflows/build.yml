@@ -19,14 +19,12 @@ jobs:
           mkdir -p app/src/main/res/mipmap-xxxhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi
           mkdir -p app/src/main/java/com/rians/jajancrush
           if [ -f icon.png ]; then for D in mipmap-xxxhdpi mipmap-xxhdpi mipmap-xhdpi mipmap-hdpi mipmap-mdpi; do cp icon.png app/src/main/res/$D/ic_launcher.png; cp icon.png app/src/main/res/$D/ic_launcher_round.png; done; fi
-          # FIX nama jajan01-06 jadi jajan0-5
           [ -f jajan01.png ] && cp jajan01.png app/src/main/res/drawable/jajan0.png
           [ -f jajan02.png ] && cp jajan02.png app/src/main/res/drawable/jajan1.png
           [ -f jajan03.png ] && cp jajan03.png app/src/main/res/drawable/jajan2.png
           [ -f jajan04.png ] && cp jajan04.png app/src/main/res/drawable/jajan3.png
           [ -f jajan05.png ] && cp jajan05.png app/src/main/res/drawable/jajan4.png
           [ -f jajan06.png ] && cp jajan06.png app/src/main/res/drawable/jajan5.png
-          # Kalau udah bener nama jajan0-5 juga tetep support
           cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan0.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan1.png app/src/main/res/drawable/ 2>/dev/null || true
