@@ -40,10 +40,10 @@ jobs:
           GRD
           cat > app/build.gradle << 'GRD'
           plugins { id 'com.android.application' version '8.1.0' apply true }
-          android { namespace "com.rians.jajancrush"; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 86; versionName "86.0" } }
+          android { namespace "com.rians.jajancrush"; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 87; versionName "87.0" } }
           GRD
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-      - name: Tulis Java V86 EFEK+ MUSIK
+      - name: Tulis Java V87 MUTE
         run: |
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA_EOF'
           package com.rians.jajancrush;
@@ -51,17 +51,17 @@ jobs:
           import android.content.SharedPreferences; import android.media.*;
           import android.graphics.*; import android.view.*; import android.widget.Toast; import java.util.*;
           public class MainActivity extends Activity {
-          SharedPreferences prefs; MediaPlayer mp;
-          protected void onCreate(Bundle b){ super.onCreate(b); prefs=getSharedPreferences("jajan_save",MODE_PRIVATE); setContentView(new GameView(this));
-            try{ int mid=getResources().getIdentifier("music","raw",getPackageName()); if(mid!=0){ mp=MediaPlayer.create(this,mid); mp.setLooping(true); mp.setVolume(0.5f,0.5f); mp.start(); } }catch(Exception e){}
+          SharedPreferences prefs; MediaPlayer mp; GameView gv;
+          protected void onCreate(Bundle b){ super.onCreate(b); prefs=getSharedPreferences("jajan_save",MODE_PRIVATE); gv=new GameView(this); setContentView(gv);
+            try{ int mid=getResources().getIdentifier("music","raw",getPackageName()); if(mid!=0){ mp=MediaPlayer.create(this,mid); mp.setLooping(true); boolean muted=prefs.getBoolean("muted",false); mp.setVolume(muted?0:0.5f, muted?0:0.5f); mp.start(); if(muted) mp.pause(); } }catch(Exception e){}
           }
           protected void onPause(){ super.onPause(); try{ if(mp!=null) mp.pause(); }catch(Exception e){} }
-          protected void onResume(){ super.onResume(); try{ if(mp!=null) mp.start(); }catch(Exception e){} }
+          protected void onResume(){ super.onResume(); try{ if(mp!=null &&!prefs.getBoolean("muted",false)) mp.start(); }catch(Exception e){} }
           class Particle{ float x,y,vx,vy,alpha=1f,size; int color; int life=30; Particle(float x,float y,int col,Random r){ this.x=x; this.y=y; this.color=col; this.vx=(r.nextFloat()-0.5f)*18; this.vy=(r.nextFloat()-0.5f)*18 - 4; this.size=8+r.nextFloat()*14; } boolean upd(){ x+=vx; y+=vy; vy+=0.6f; alpha-=0.04f; life--; return life>0 && alpha>0; } }
           class GameView extends View {
           int ROWS=6, COLS=5; int[][] grid=new int[ROWS][COLS]; int score=0, moves=30, level=1; Random rnd=new Random();
           float cellW, cellH, gridX, gridY, downX, downY; Bitmap bg; Bitmap[] jajans=new Bitmap[6];
-          RectF btnLevel, btnScore, btnMoves; ArrayList<Particle> parts=new ArrayList<>();
+          RectF btnLevel, btnScore, btnMoves, btnMute; ArrayList<Particle> parts=new ArrayList<>();
           int getTarget(){ if(level==1) return 500; if(level==2) return 1200; if(level==3) return 2100; if(level==4) return 3200; return 3200 + (level-4)*1100; }
           int getMovesForLevel(int lvl){ int m=32-(lvl-1)*3; if(m<12) m=12; return m; }
           void saveProgress(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.apply(); }catch(Exception e){} }
@@ -71,7 +71,8 @@ jobs:
           public GameView(Context c){ super(c); loadProgress(); moves=getMovesForLevel(level);
             try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bg=safe(bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan"+i,"drawable",getPackageName()); if(id!=0) jajans[i]=clean(safe(id)); } }catch(Exception e){} initGrid();
           }
-          void playPop(){ try{ ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,80); tg.startTone(ToneGenerator.TONE_PROP_BEEP,120); }catch(Exception e){} }
+          void toggleMute(){ try{ boolean muted=prefs.getBoolean("muted",false); boolean now=!muted; SharedPreferences.Editor ed=prefs.edit(); ed.putBoolean("muted",now); ed.apply(); if(mp!=null){ if(now){ mp.setVolume(0,0); mp.pause(); Toast.makeText(getContext(),"🔇 Musik Mati",Toast.LENGTH_SHORT).show(); } else { mp.setVolume(0.5f,0.5f); mp.start(); Toast.makeText(getContext(),"🔊 Musik Nyala",Toast.LENGTH_SHORT).show(); } } invalidate(); }catch(Exception e){} }
+          void playPop(){ try{ if(prefs.getBoolean("muted",false)) return; ToneGenerator tg=new ToneGenerator(AudioManager.STREAM_MUSIC,70); tg.startTone(ToneGenerator.TONE_PROP_BEEP,100); }catch(Exception e){} }
           void spawnParticles(float cx,float cy){ int col=Color.argb(255, 255, 215+rnd.nextInt(40), 0+rnd.nextInt(100)); for(int i=0;i<14;i++) parts.add(new Particle(cx,cy,col,rnd)); parts.add(new Particle(cx,cy,Color.WHITE,rnd)); }
           void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int t; do{ t=rnd.nextInt(6); grid[r][cc]=t; }while(isMatch(r,cc)); } }
           boolean isMatch(int r,int c){ int t=grid[r][c]; if(c>=2&&grid[r][c-1]==t&&grid[r][c-2]==t) return true; if(r>=2&&grid[r-1][c]==t&&grid[r-2][c]==t) return true; return false; }
@@ -82,6 +83,7 @@ jobs:
             btnLevel=new RectF(w*0.06f, h*0.04f, w*0.06f+bw, h*0.04f+bh);
             btnMoves=new RectF(w*0.06f, h*0.11f, w*0.06f+bw, h*0.11f+bh);
             btnScore=new RectF(w*0.71f, h*0.07f, w*0.71f+bw, h*0.07f+bh);
+            btnMute=new RectF(w*0.44f, h*0.04f, w*0.56f, h*0.11f);
           }
           protected void onDraw(Canvas canvas){
             ensureBoard();
@@ -94,9 +96,10 @@ jobs:
             Paint smallVal=new Paint(Paint.ANTI_ALIAS_FLAG); smallVal.setColor(Color.WHITE); smallVal.setTextAlign(Paint.Align.CENTER); smallVal.setFakeBoldText(true); smallVal.setTextSize(getWidth()*0.030f); smallVal.setShadowLayer(3,2,2,Color.BLACK);
             RectF[] btns={btnLevel, btnScore, btnMoves}; String[] labs={"LEVEL","SCORE","MOVES"}; String[] vals={""+level, score+"/"+getTarget(), ""+moves};
             for(int i=0;i<3;i++){ RectF b=btns[i]; if(b==null) continue; canvas.drawRoundRect(b, 14,14, btnBg); canvas.drawRoundRect(b, 14,14, btnBorder); canvas.drawText(labs[i], b.centerX(), b.top + b.height()*0.34f, label); if(i==1){ canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.77f, smallVal); } else { canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.80f, value); } }
+            if(btnMute!=null){ boolean muted=prefs.getBoolean("muted",false); Paint muteBg=new Paint(Paint.ANTI_ALIAS_FLAG); muteBg.setColor(muted?Color.parseColor("#B71C1C"):Color.parseColor("#2E7D32")); muteBg.setAlpha(220); canvas.drawRoundRect(btnMute, 20,20, muteBg); canvas.drawRoundRect(btnMute, 20,20, btnBorder); Paint icon=new Paint(Paint.ANTI_ALIAS_FLAG); icon.setColor(Color.WHITE); icon.setTextAlign(Paint.Align.CENTER); icon.setTextSize(getWidth()*0.055f); icon.setFakeBoldText(true); canvas.drawText(muted?"MUTE":"ON", btnMute.centerX(), btnMute.centerY()+getWidth()*0.018f, icon); }
             Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFF8E1")); cellBg.setAlpha(235);
             Paint cellBd=new Paint(Paint.ANTI_ALIAS_FLAG); cellBd.setColor(Color.parseColor("#8D6E63")); cellBd.setStyle(Paint.Style.STROKE); cellBd.setStrokeWidth(2);
-            for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+4, t=gridY+r*cellH+4, rr=gridX+(c+1)*cellW-4, bb=gridY+(r+1)*cellH-4; RectF rf=new RectF(l,t,rr,bb); canvas.drawRoundRect(rf, 16,16, cellBg); canvas.drawRoundRect(rf,16,16,cellBd); int type=grid[r][c]; if(type!=-1 && jajans[type]!=null){ RectF icon=new RectF(l+6,t+6,rr-6,bb-6); canvas.drawBitmap(jajans[type], null, icon, null); } }
+            for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+4, t=gridY+r*cellH+4, rr=gridX+(c+1)*cellW-4, bb=gridY+(r+1)*cellH-4; RectF rf=new RectF(l,t,rr,bb); canvas.drawRoundRect(rf, 16,16, cellBg); canvas.drawRoundRect(rf,16,16,cellBd); int type=grid[r][c]; if(type!=-1 && jajans[type]!=null){ RectF icon2=new RectF(l+6,t+6,rr-6,bb-6); canvas.drawBitmap(jajans[type], null, icon2, null); } }
             Paint pPart=new Paint(Paint.ANTI_ALIAS_FLAG);
             for(int i=parts.size()-1;i>=0;i--){ Particle pt=parts.get(i); if(!pt.upd()){ parts.remove(i); continue; } pPart.setColor(pt.color); pPart.setAlpha((int)(pt.alpha*255)); canvas.drawCircle(pt.x, pt.y, pt.size*pt.alpha, pPart); }
             if(parts.size()>0) postInvalidateDelayed(16);
@@ -115,6 +118,7 @@ jobs:
             if(e.getAction()==MotionEvent.ACTION_DOWN){ downX=e.getX(); downY=e.getY(); return true; }
             if(e.getAction()==MotionEvent.ACTION_UP){
               float x=e.getX(), y=e.getY();
+              if(btnMute!=null && btnMute.contains(x,y)){ toggleMute(); return true; }
               if(score >= getTarget()){ level++; score=0; moves=getMovesForLevel(level); saveProgress(); initGrid(); invalidate(); Toast.makeText(getContext(), "Level "+level+" kesimpen!", Toast.LENGTH_LONG).show(); return true; }
               if(moves<=0 && score < getTarget()){ score=0; moves=getMovesForLevel(level); initGrid(); invalidate(); return true; }
               if(btnLevel!=null && btnLevel.contains(x,y)){ Toast.makeText(getContext(), "Level "+level+" | Target "+getTarget(), Toast.LENGTH_SHORT).show(); return true; }
@@ -152,5 +156,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-86-EFEK-MUSIK
+          name: Jajan-Crush-87-MUTE-BUTTON
           path: app/build/outputs/apk/debug/*.apk
