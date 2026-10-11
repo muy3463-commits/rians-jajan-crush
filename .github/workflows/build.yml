@@ -42,64 +42,128 @@ jobs:
             class GameView extends View{
               int ROWS=6, COLS=5; int[][] grid=new int[ROWS][COLS];
               float cellW, cellH, gridX, gridY;
-              RectF rLevel, rScore, rMoves, rMute;
-              int level=1, score=0, moves=28;
+              RectF boxLevel, boxScore, boxMoves, boxMute;
+              int level=1, score=340, moves=28;
               float downX, downY; int downR, downC; int selR=-1, selC=-1;
               Bitmap[] jajanBmp=new Bitmap[6]; Bitmap bg;
               ArrayList<Particle> parts=new ArrayList<>();
-              int complexity=0; boolean jackpotReady=false; int jackpotR=-1, jackpotC=-1; int jackpotAnim=0; boolean showJackpotPopup=false; int jackpotPopupAnim=0;
-              int getTarget(){ return 500; }
-              void saveProgress(){ try{ prefs.edit().putInt("level",level).apply(); }catch(Exception e){} }
-              void loadProgress(){ try{ level=prefs.getInt("level",1); }catch(Exception e){} }
+              int jackpotR=-1, jackpotC=-1; boolean jackpotReady=false; int jackpotAnim=0; int failCount=0; boolean showJackpot=false; int jackpotPopup=0;
               Bitmap safe(int id){ try{ return BitmapFactory.decodeResource(getResources(),id); }catch(Exception e){ return null; } }
-              public GameView(Context c){ super(c); loadProgress(); try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bg=safe(bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName()); if(id!=0) jajanBmp[i]=safe(id); } }catch(Exception e){} }
-              void toggleMute(){ try{ isMuted=!isMuted; prefs.edit().putBoolean("mute",isMuted).apply(); if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); } else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); } }catch(Exception e){} }
-              void spawnParticles(float cx,float cy){ for(int i=0;i<20;i++){ Particle p=new Particle(); p.x=cx; p.y=cy; p.vx=(float)(Math.random()*12-6); p.vy=(float)(Math.random()*-12-3); p.r=(float)(Math.random()*10+5); p.alpha=255; parts.add(p); } }
-              void initGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int v; do{ v=(int)(Math.random()*6); grid[r][cc]=v; } while( (r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc]) || (cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2]) ); } complexity=0; jackpotReady=false; selR=-1; selC=-1; }
-              boolean check(){
-                boolean matched=false; boolean[][] del=new boolean[ROWS][COLS];
-                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(r<ROWS-2 && grid[r][cc]==grid[r+1][cc] && grid[r][cc]==grid[r+2][cc]){ del[r][cc]=del[r+1][cc]=del[r+2][cc]=true; matched=true; } if(cc<COLS-2 && grid[r][cc]==grid[r][cc+1] && grid[r][cc]==grid[r][cc+2]){ del[r][cc]=del[r][cc+1]=del[r][cc+2]=true; matched=true; } }
-                if(matched && jackpotReady && del[jackpotR][jackpotC]){ score+=500; showJackpotPopup=true; jackpotPopupAnim=0; spawnParticles(gridX+jackpotC*cellW+cellW/2, gridY+jackpotR*cellH+cellH/2); jackpotReady=false; complexity=0; }
-                if(matched){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(del[r][cc]){ score+=20; grid[r][cc]=-1; } for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*6); } return true; }
-                complexity++; if(complexity>12 &&!jackpotReady){ if(Math.random()>0.35){ jackpotReady=true; jackpotR=(int)(Math.random()*ROWS); jackpotC=(int)(Math.random()*COLS); } }
+              public GameView(Context c){
+                super(c);
+                try{
+                  int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName());
+                  if(bgId!=0) bg=safe(bgId);
+                  for(int i=0;i<6;i++){
+                    int id=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName());
+                    if(id!=0) jajanBmp[i]=safe(id);
+                  }
+                }catch(Exception e){}
+              }
+              void toggleMute(){
+                isMuted=!isMuted;
+                try{ prefs.edit().putBoolean("mute",isMuted).apply(); }catch(Exception e){}
+                try{
+                  if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); }
+                  else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); }
+                }catch(Exception e){}
+              }
+              void initGrid(){
+                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
+                  int v;
+                  do{
+                    v=(int)(Math.random()*6);
+                    grid[r][cc]=v;
+                  } while( (r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc]) || (cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2]) );
+                }
+                failCount=0; jackpotReady=false; selR=-1; selC=-1;
+              }
+              void spawn(float x,float y){ for(int i=0;i<18;i++){ Particle p=new Particle(); p.x=x; p.y=y; p.vx=(float)(Math.random()*12-6); p.vy=(float)(Math.random()*-10-2); p.r=(float)(Math.random()*8+4); p.alpha=255; parts.add(p); } }
+              boolean checkMatch(){
+                boolean[][] del=new boolean[ROWS][COLS]; boolean found=false;
+                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
+                  if(r<ROWS-2 && grid[r][cc]==grid[r+1][cc] && grid[r][cc]==grid[r+2][cc]){ del[r][cc]=del[r+1][cc]=del[r+2][cc]=true; found=true; }
+                  if(cc<COLS-2 && grid[r][cc]==grid[r][cc+1] && grid[r][cc]==grid[r][cc+2]){ del[r][cc]=del[r][cc+1]=del[r][cc+2]=true; found=true; }
+                }
+                if(found && jackpotReady && del[jackpotR][jackpotC]){ score+=500; showJackpot=true; jackpotPopup=0; spawn(gridX+jackpotC*cellW+cellW/2, gridY+jackpotR*cellH+cellH/2); jackpotReady=false; failCount=0; }
+                if(found){
+                  for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(del[r][cc]){ score+=20; grid[r][cc]=-1; }
+                  for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*6); }
+                  return true;
+                }
+                failCount++; if(failCount>12 &&!jackpotReady){ if(Math.random()>0.4){ jackpotReady=true; jackpotR=(int)(Math.random()*ROWS); jackpotC=(int)(Math.random()*COLS); } }
                 return false;
               }
               protected void onDraw(Canvas canvas){
-                if(cellW==0){ int w=getWidth(), h=getHeight(); if(w==0||h==0) return; gridX=w*0.045f; gridY=h*0.392f; cellW=(w-gridX*2)/COLS; cellH=cellW; float boxW=w*0.23f, boxH=h*0.062f; rLevel=new RectF(w*0.045f, h*0.088f, w*0.045f+boxW, h*0.088f+boxH); rScore=new RectF(w*0.725f, h*0.088f, w*0.725f+boxW, h*0.088f+boxH); rMoves=new RectF(w*0.045f, h*0.175f, w*0.045f+boxW, h*0.175f+boxH); rMute=new RectF(w*0.725f, h*0.175f, w*0.725f+boxW, h*0.175f+boxW); initGrid(); }
-                if(bg!=null) canvas.drawBitmap(bg,null,new Rect(0,0,getWidth(),getHeight()),null); else canvas.drawColor(Color.parseColor("#5D4037"));
-                Paint txt=new Paint(Paint.ANTI_ALIAS_FLAG); txt.setColor(Color.WHITE); txt.setTextAlign(Paint.Align.CENTER); txt.setFakeBoldText(true);
-                Paint goldLab=new Paint(Paint.ANTI_ALIAS_FLAG); goldLab.setColor(Color.parseColor("#FFD54F")); goldLab.setTextAlign(Paint.Align.CENTER); goldLab.setFakeBoldText(true); goldLab.setTextSize(getWidth()*0.028f);
-                txt.setTextSize(getWidth()*0.055f); if(rLevel!=null){ canvas.drawText("1", rLevel.centerX(), rLevel.centerY()+12, txt); canvas.drawText("LEVEL", rLevel.centerX(), rLevel.top-8, goldLab); }
-                txt.setTextSize(getWidth()*0.045f); if(rScore!=null){ canvas.drawText(score+"/500", rScore.centerX(), rScore.centerY()+10, txt); canvas.drawText("SCORE", rScore.centerX(), rScore.top-8, goldLab); }
-                txt.setTextSize(getWidth()*0.05f); if(rMoves!=null){ canvas.drawText(String.valueOf(moves), rMoves.centerX(), rMoves.centerY()+10, txt); canvas.drawText("MOVES", rMoves.centerX(), rMoves.top-8, goldLab); }
-                Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFFEF8E8"));
-                Paint cellBorder=new Paint(Paint.ANTI_ALIAS_FLAG); cellBorder.setColor(Color.parseColor("#FFE0C8A0")); cellBorder.setStyle(Paint.Style.STROKE); cellBorder.setStrokeWidth(2);
-                Paint selPaint=new Paint(Paint.ANTI_ALIAS_FLAG); selPaint.setColor(Color.parseColor("#FFEB3B")); selPaint.setStyle(Paint.Style.STROKE); selPaint.setStrokeWidth(7);
-                Paint jackpotPaint=new Paint(Paint.ANTI_ALIAS_FLAG); jackpotPaint.setColor(Color.parseColor("#FFFFEB3B")); jackpotPaint.setStyle(Paint.Style.STROKE); jackpotPaint.setStrokeWidth(6);
-                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
-                  float x=gridX+cc*cellW, y=gridY+r*cellH; RectF rf=new RectF(x+4,y+4,x+cellW-4,y+cellH-4);
-                  canvas.drawRoundRect(rf,14,14,cellBg); canvas.drawRoundRect(rf,14,14,cellBorder);
-                  if(r==selR && cc==selC) canvas.drawRoundRect(new RectF(x+1,y+1,x+cellW-1,y+cellH-1),16,16,selPaint);
-                  if(jackpotReady && r==jackpotR && cc==jackpotC){ jackpotPaint.setAlpha(120+(jackpotAnim%130)); jackpotAnim+=6; canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),18,18,jackpotPaint); }
-                  if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanBmp[grid[r][cc]]!=null) canvas.drawBitmap(jajanBmp[grid[r][cc]], null, new RectF(x+8,y+8,x+cellW-8,y+cellH-8), null);
+                int w=getWidth(), h=getHeight(); if(w==0||h==0) return;
+                if(cellW==0){
+                  gridX=w*0.032f; gridY=h*0.412f; cellW=(w-gridX*2)/COLS; cellH=cellW*0.99f;
+                  float bw=w*0.26f, bh=h*0.058f; float muteS=w*0.13f;
+                  boxLevel=new RectF(w*0.032f, h*0.082f, w*0.032f+bw, h*0.082f+bh);
+                  boxMoves=new RectF(w*0.032f, h*0.168f, w*0.032f+bw, h*0.168f+bh);
+                  boxScore=new RectF(w*0.708f, h*0.082f, w*0.708f+bw, h*0.082f+bh);
+                  boxMute=new RectF(w*0.708f+bw/2-muteS/2, h*0.168f, w*0.708f+bw/2+muteS/2, h*0.168f+muteS);
+                  initGrid();
                 }
-                Paint pPart=new Paint(Paint.ANTI_ALIAS_FLAG); pPart.setColor(Color.YELLOW); for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.6f; p.alpha-=10; if(p.alpha<=0) parts.remove(i); else { pPart.setAlpha((int)p.alpha); canvas.drawCircle(p.x,p.y,p.r,pPart); } }
-                if(parts.size()>0 || jackpotReady) postInvalidateDelayed(40);
-                if(moves<=0){ Paint over=new Paint(); over.setColor(Color.parseColor("#DD000000")); canvas.drawRect(0,0,getWidth(),getHeight(),over); txt.setTextSize(50); canvas.drawText("GAME OVER", getWidth()/2, getHeight()/2, txt); }
-                else if(score>=500){ Paint over=new Paint(); over.setColor(Color.parseColor("#CC4CAF50")); canvas.drawRect(0,0,getWidth(),getHeight(),over); txt.setTextSize(48); canvas.drawText("MENANG!", getWidth()/2, getHeight()/2, txt); }
-                if(showJackpotPopup){ Paint jTx=new Paint(Paint.ANTI_ALIAS_FLAG); jTx.setColor(Color.YELLOW); jTx.setTextSize(62); jTx.setFakeBoldText(true); jTx.setTextAlign(Paint.Align.CENTER); jTx.setShadowLayer(10,0,0,Color.BLACK); float sc=1f+ (float)Math.sin(jackpotPopupAnim*0.25)*0.2f; canvas.save(); canvas.scale(sc,sc,getWidth()/2, getHeight()/2); canvas.drawText("JACKPOT +500!", getWidth()/2, getHeight()/2, jTx); canvas.restore(); jackpotPopupAnim++; if(jackpotPopupAnim>50) showJackpotPopup=false; postInvalidateDelayed(40); }
+                if(bg!=null) canvas.drawBitmap(bg,null,new Rect(0,0,w,h),null); else canvas.drawColor(Color.parseColor("#5D4037"));
+                Paint boxBg=new Paint(Paint.ANTI_ALIAS_FLAG); boxBg.setColor(Color.parseColor("#4A2A1A"));
+                Paint boxBorder=new Paint(Paint.ANTI_ALIAS_FLAG); boxBorder.setColor(Color.parseColor("#FFD700")); boxBorder.setStyle(Paint.Style.STROKE); boxBorder.setStrokeWidth(3);
+                Paint label=new Paint(Paint.ANTI_ALIAS_FLAG); label.setColor(Color.parseColor("#FFD54F")); label.setTextAlign(Paint.Align.CENTER); label.setTextSize(w*0.029f); label.setFakeBoldText(true);
+                Paint value=new Paint(Paint.ANTI_ALIAS_FLAG); value.setColor(Color.WHITE); value.setTextAlign(Paint.Align.CENTER); value.setFakeBoldText(true);
+                if(boxLevel!=null){ canvas.drawRoundRect(boxLevel,12,12,boxBg); canvas.drawRoundRect(boxLevel,12,12,boxBorder); label.setTextSize(w*0.031f); canvas.drawText("LEVEL", boxLevel.centerX(), boxLevel.top+w*0.038f, label); value.setTextSize(w*0.055f); canvas.drawText(String.valueOf(level), boxLevel.centerX(), boxLevel.centerY()+w*0.045f, value); }
+                if(boxMoves!=null){ canvas.drawRoundRect(boxMoves,12,12,boxBg); canvas.drawRoundRect(boxMoves,12,12,boxBorder); canvas.drawText("MOVES", boxMoves.centerX(), boxMoves.top+w*0.038f, label); value.setTextSize(w*0.055f); canvas.drawText(String.valueOf(moves), boxMoves.centerX(), boxMoves.centerY()+w*0.045f, value); }
+                if(boxScore!=null){ canvas.drawRoundRect(boxScore,12,12,boxBg); canvas.drawRoundRect(boxScore,12,12,boxBorder); canvas.drawText("SCORE", boxScore.centerX(), boxScore.top+w*0.038f, label); value.setTextSize(w*0.038f); canvas.drawText(score+"/500", boxScore.centerX(), boxScore.centerY()+w*0.04f, value); }
+                if(boxMute!=null){
+                  Paint muteBg=new Paint(Paint.ANTI_ALIAS_FLAG); muteBg.setColor(Color.parseColor("#4A2A1A"));
+                  Paint muteBd=new Paint(Paint.ANTI_ALIAS_FLAG); muteBd.setColor(Color.parseColor("#FFD700")); muteBd.setStyle(Paint.Style.STROKE); muteBd.setStrokeWidth(3);
+                  canvas.drawCircle(boxMute.centerX(), boxMute.centerY(), boxMute.width()/2, muteBg);
+                  canvas.drawCircle(boxMute.centerX(), boxMute.centerY(), boxMute.width()/2, muteBd);
+                  Paint icon=new Paint(Paint.ANTI_ALIAS_FLAG); icon.setColor(Color.parseColor("#FFD700")); icon.setTextSize(w*0.07f); icon.setTextAlign(Paint.Align.CENTER);
+                  canvas.drawText(isMuted?"🔇":"🔊", boxMute.centerX(), boxMute.centerY()+w*0.025f, icon);
+                }
+                Paint cream=new Paint(Paint.ANTI_ALIAS_FLAG); cream.setColor(Color.parseColor("#FFFEF8E8"));
+                Paint sel=new Paint(Paint.ANTI_ALIAS_FLAG); sel.setColor(Color.parseColor("#FFEB3B")); sel.setStyle(Paint.Style.STROKE); sel.setStrokeWidth(6);
+                Paint jack=new Paint(Paint.ANTI_ALIAS_FLAG); jack.setColor(Color.YELLOW); jack.setStyle(Paint.Style.STROKE); jack.setStrokeWidth(7);
+                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
+                  float x=gridX+cc*cellW, y=gridY+r*cellH;
+                  RectF rf=new RectF(x+2,y+2,x+cellW-2,y+cellH-2);
+                  canvas.drawRoundRect(rf,14,14,cream);
+                  if(r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),16,16,sel);
+                  if(jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(120+(jackpotAnim%135)); jackpotAnim+=7; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),16,16,jack); }
+                  if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanBmp[grid[r][cc]]!=null){
+                    canvas.drawBitmap(jajanBmp[grid[r][cc]], null, new RectF(x+4,y+4,x+cellW-4,y+cellH-4), null);
+                  }
+                }
+                Paint pp=new Paint(Paint.ANTI_ALIAS_FLAG); pp.setColor(Color.YELLOW);
+                for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.5f; p.alpha-=9; if(p.alpha<=0) parts.remove(i); else { pp.setAlpha((int)p.alpha); canvas.drawCircle(p.x,p.y,p.r,pp); } }
+                if(parts.size()>0 || jackpotReady) postInvalidateDelayed(35);
+                if(showJackpot){
+                  Paint jTx=new Paint(Paint.ANTI_ALIAS_FLAG); jTx.setColor(Color.YELLOW); jTx.setTextSize(w*0.11f); jTx.setFakeBoldText(true); jTx.setTextAlign(Paint.Align.CENTER); jTx.setShadowLayer(12,0,0,Color.BLACK);
+                  float sc=1f+ (float)Math.sin(jackpotPopup*0.3f)*0.2f; canvas.save(); canvas.scale(sc,sc,w/2,h/2); canvas.drawText("JACKPOT +500!", w/2, h/2, jTx); canvas.restore(); jackpotPopup++; if(jackpotPopup>50) showJackpot=false; postInvalidateDelayed(30);
+                }
               }
               public boolean onTouchEvent(MotionEvent e){
                 if(e.getAction()==MotionEvent.ACTION_DOWN){
-                  float x=e.getX(), y=e.getY(); if(rMute!=null && rMute.contains(x,y)){ toggleMute(); invalidate(); return true; }
-                  if(score>=500 || moves<=0){ moves=28; score=0; initGrid(); invalidate(); return true; }
+                  float x=e.getX(), y=e.getY();
+                  if(boxMute!=null && boxMute.contains(x,y)){ toggleMute(); invalidate(); return true; }
                   downX=x; downY=y; downR=(int)((y-gridY)/cellH); downC=(int)((x-gridX)/cellW);
                   if(downR>=0&&downR<ROWS&&downC>=0&&downC<COLS){ selR=downR; selC=downC; invalidate(); }
                 }
                 if(e.getAction()==MotionEvent.ACTION_UP){
-                  float x=e.getX(), y=e.getY(); float dx=x-downX, dy=y-downY; int r=downR, c=downC; if(r<0||r>=ROWS||c<0||c>=COLS){ selR=-1; selC=-1; invalidate(); return true; }
-                  if(Math.abs(dx)<15 && Math.abs(dy)<15) return true;
-                  if(Math.abs(dx)>Math.abs(dy)){ int nc=c+ (dx>0?1:-1); if(nc>=0&&nc<COLS){ int tmp=grid[r][c]; grid[r][c]=grid[r][nc]; grid[r][nc]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[r][nc]; grid[r][nc]=tmp; } else { moves--; } } } else { int nr=r+ (dy>0?1:-1); if(nr>=0&&nr<ROWS){ int tmp=grid[r][c]; grid[r][c]=grid[nr][c]; grid[nr][c]=tmp; if(!check()){ tmp=grid[r][c]; grid[r][c]=grid[nr][c]; grid[nr][c]=tmp; } else { moves--; } } }
+                  float x=e.getX(), y=e.getY(); float dx=x-downX, dy=y-downY; int r=downR, c=downC;
+                  if(r<0||r>=ROWS||c<0||c>=COLS){ selR=-1; selC=-1; invalidate(); return true; }
+                  if(Math.abs(dx)<10 && Math.abs(dy)<10) return true;
+                  if(Math.abs(dx)>Math.abs(dy)){
+                    int nc=c+(dx>0?1:-1); if(nc>=0&&nc<COLS){
+                      int tmp=grid[r][c]; grid[r][c]=grid[r][nc]; grid[r][nc]=tmp;
+                      if(!checkMatch()){ tmp=grid[r][c]; grid[r][c]=grid[r][nc]; grid[r][nc]=tmp; } else { moves--; }
+                    }
+                  } else {
+                    int nr=r+(dy>0?1:-1); if(nr>=0&&nr<ROWS){
+                      int tmp=grid[r][c]; grid[r][c]=grid[nr][c]; grid[nr][c]=tmp;
+                      if(!checkMatch()){ tmp=grid[r][c]; grid[r][c]=grid[nr][c]; grid[nr][c]=tmp; } else { moves--; }
+                    }
+                  }
                   selR=-1; selC=-1; invalidate();
                 }
                 return true;
@@ -116,8 +180,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 7
-                  versionName "5.2 Final Cantik Jackpot"
+                  versionCode 8
+                  versionName "6.0 Perfect Foto2 + Jackpot"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -147,5 +211,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-v52-final-cantik-jackpot
+          name: jajan-crush-v6-perfect-foto2-jackpot
           path: app/build/outputs/apk/debug/app-debug.apk
