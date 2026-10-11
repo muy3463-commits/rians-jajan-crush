@@ -16,6 +16,10 @@ jobs:
         run: |
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
           mkdir -p app/src/main/java/com/rians/jajancrush
 
           cp bg_desa.png app/src/main/res/drawable/bg_desa.png
@@ -26,20 +30,12 @@ jobs:
           cp jajan05.png app/src/main/res/drawable/jajan4.png 2>/dev/null || true
           cp jajan06.png app/src/main/res/drawable/jajan5.png 2>/dev/null || true
 
-          if [ -f icon.png ]; then
-            cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png
-          else
-            cp bg_desa.png app/src/main/res/mipmap-hdpi/ic_launcher.png
-          fi
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          if [ -f icon.png ]; then ICON=icon.png; else ICON=bg_desa.png; fi
+          for d in hdpi mdpi xhdpi xxhdpi xxxhdpi; do
+            cp $ICON app/src/main/res/mipmap-${d}/ic_launcher.png
+            cp $ICON app/src/main/res/mipmap-${d}/ic_launcher_round.png
+          done
 
-          # FIX UTAMA - build.gradle yang baru kompatibel Gradle 8
           cat > settings.gradle << 'GRD'
           pluginManagement {
               repositories {
@@ -59,7 +55,7 @@ jobs:
           GRD
 
           cat > build.gradle << 'GRD'
-          // Top-level build file - kosongin aja buat Gradle 8
+          // Top-level
           GRD
 
           cat > app/build.gradle << 'GRD'
@@ -73,8 +69,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 79
-                  versionName "79.0"
+                  versionCode 80
+                  versionName "80.0"
               }
           }
           GRD
@@ -115,5 +111,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-79-FIXED
+          name: Jajan-Crush-80-FIXED
           path: app/build/outputs/apk/debug/*.apk
