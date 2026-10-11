@@ -71,7 +71,7 @@ jobs:
           void drop(){ for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=rnd.nextInt(6); } }
           } }
           JAVA
-          run: ./gradle-8.0/bin/gradle assembleDebug --no-daemon
+       run: ./gradle-8.0/bin/gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
