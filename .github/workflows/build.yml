@@ -68,7 +68,6 @@ jobs:
             if(cellW>0) return; int w=getWidth(), h=getHeight(); if(w==0||h==0) return;
             gridX=w*0.06f; gridY=h*0.385f; float gw=w*0.88f; float gh=h*0.585f; cellW=gw/COLS; cellH=gh/ROWS;
             float bw=w*0.29f, bh=h*0.068f;
-            // NAIKIN LAGI LUR - LEBIH ATAS
             btnLevel=new RectF(w*0.06f, h*0.055f, w*0.06f+bw, h*0.055f+bh);
             btnMoves=new RectF(w*0.06f, h*0.145f, w*0.06f+bw, h*0.145f+bh);
             btnScore=new RectF(w*0.65f, h*0.095f, w*0.65f+bw, h*0.095f+bh);
@@ -82,24 +81,8 @@ jobs:
             Paint label=new Paint(Paint.ANTI_ALIAS_FLAG); label.setColor(Color.parseColor("#FFD54F")); label.setTextAlign(Paint.Align.CENTER); label.setFakeBoldText(true); label.setTextSize(getWidth()*0.030f);
             Paint value=new Paint(Paint.ANTI_ALIAS_FLAG); value.setColor(Color.WHITE); value.setTextAlign(Paint.Align.CENTER); value.setFakeBoldText(true); value.setTextSize(getWidth()*0.060f); value.setShadowLayer(3,2,2,Color.BLACK);
             Paint smallVal=new Paint(Paint.ANTI_ALIAS_FLAG); smallVal.setColor(Color.WHITE); smallVal.setTextAlign(Paint.Align.CENTER); smallVal.setFakeBoldText(true); smallVal.setTextSize(getWidth()*0.048f); smallVal.setShadowLayer(3,2,2,Color.BLACK);
-
-            RectF[] btns={btnLevel, btnScore, btnMoves};
-            String[] labs={"LEVEL","SCORE","MOVES"};
-            String[] vals={""+level, score+"/"+getTarget(), ""+moves};
-            for(int i=0;i<3;i++){
-              RectF b=btns[i]; if(b==null) continue;
-              canvas.drawRoundRect(b, 16,16, btnBg); canvas.drawRoundRect(b, 16,16, btnBorder);
-              // TEKS DI TENGAH BENER - BUKAN DI GARIS
-              float centerY = b.centerY();
-              // Label di 30% atas kotak
-              canvas.drawText(labs[i], b.centerX(), b.top + b.height()*0.32f, label);
-              // Angka di 70% bawah kotak - bener2 tengah
-              if(i==1){
-                canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.75f, smallVal);
-              } else {
-                canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.78f, value);
-              }
-            }
+            RectF[] btns={btnLevel, btnScore, btnMoves}; String[] labs={"LEVEL","SCORE","MOVES"}; String[] vals={""+level, score+"/"+getTarget(), ""+moves};
+            for(int i=0;i<3;i++){ RectF b=btns[i]; if(b==null) continue; canvas.drawRoundRect(b, 16,16, btnBg); canvas.drawRoundRect(b, 16,16, btnBorder); canvas.drawText(labs[i], b.centerX(), b.top + b.height()*0.32f, label); if(i==1){ canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.75f, smallVal); } else { canvas.drawText(vals[i], b.centerX(), b.top + b.height()*0.78f, value); } }
             Paint cellBg=new Paint(Paint.ANTI_ALIAS_FLAG); cellBg.setColor(Color.parseColor("#FFF8E1")); cellBg.setAlpha(235);
             Paint cellBd=new Paint(Paint.ANTI_ALIAS_FLAG); cellBd.setColor(Color.parseColor("#8D6E63")); cellBd.setStyle(Paint.Style.STROKE); cellBd.setStrokeWidth(2);
             for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){ float l=gridX+c*cellW+4, t=gridY+r*cellH+4, rr=gridX+(c+1)*cellW-4, bb=gridY+(r+1)*cellH-4; RectF rf=new RectF(l,t,rr,bb); canvas.drawRoundRect(rf, 16,16, cellBg); canvas.drawRoundRect(rf,16,16,cellBd); int type=grid[r][c]; if(jajans[type]!=null){ RectF icon=new RectF(l+6,t+6,rr-6,bb-6); canvas.drawBitmap(jajans[type], null, icon, null); } }
@@ -145,9 +128,9 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
           unzip -q gradle-8.0-bin.zip
-       ./gradle-8.0/bin/gradle assembleDebug --no-daemon
+          ./gradle-8.0/bin/gradle assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jajan-Crush-84-FIX-ATAS-TENGAH
+          name: Jajan-Crush-84-FIX
           path: app/build/outputs/apk/debug/*.apk
