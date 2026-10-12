@@ -58,7 +58,7 @@ jobs:
               row.setGravity(Gravity.CENTER);
               FrameLayout.LayoutParams flp=new FrameLayout.LayoutParams(-1,-2);
               flp.gravity=Gravity.BOTTOM|Gravity.CENTER;
-              flp.bottomMargin=580;
+              flp.bottomMargin=495;
               row.setLayoutParams(flp);
               Typeface tf = Typeface.create("serif", Typeface.BOLD);
               Button play=new Button(this);
@@ -66,11 +66,14 @@ jobs:
               play.setTypeface(tf);
               play.getPaint().setFakeBoldText(true);
               play.setTextColor(Color.parseColor("#FFEFAF"));
-              play.setTextSize(24);
+              play.setTextSize(26);
               play.setAllCaps(false);
               play.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               play.setBackgroundColor(Color.TRANSPARENT);
-              play.setLayoutParams(new LinearLayout.LayoutParams(400,180));
+              play.setGravity(Gravity.CENTER);
+              LinearLayout.LayoutParams lpp=new LinearLayout.LayoutParams(380,170);
+              lpp.leftMargin=5;
+              play.setLayoutParams(lpp);
               addEffect(play);
               play.setOnClickListener(v->{ startActivity(new Intent(SplashActivity.this, MainActivity.class)); finish(); });
               Button exit=new Button(this);
@@ -78,12 +81,14 @@ jobs:
               exit.setTypeface(tf);
               exit.getPaint().setFakeBoldText(true);
               exit.setTextColor(Color.parseColor("#FFEFAF"));
-              exit.setTextSize(24);
+              exit.setTextSize(26);
               exit.setAllCaps(false);
               exit.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               exit.setBackgroundColor(Color.TRANSPARENT);
-              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(400,180);
-              lp2.leftMargin=50; exit.setLayoutParams(lp2);
+              exit.setGravity(Gravity.CENTER);
+              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(380,170);
+              lp2.leftMargin=125;
+              exit.setLayoutParams(lp2);
               addEffect(exit);
               exit.setOnClickListener(v-> finishAffinity());
               row.addView(play); row.addView(exit);
@@ -92,7 +97,6 @@ jobs:
             }
           }
           SPLASH
-
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVAEOF'
           package com.rians.jajancrush;
           import android.app.Activity;
@@ -195,8 +199,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 28
-                  versionName "V11-FIX-FINAL"
+                  versionCode 30
+                  versionName "V13-KIRI-KANAN-BAWAH"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -214,7 +218,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V11" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V13" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -233,5 +237,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V11-FIX-FINAL
+          name: jajan-crush-V13-KIRI-KANAN-BAWAH
           path: app/build/outputs/apk/debug/app-debug.apk
