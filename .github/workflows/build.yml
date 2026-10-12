@@ -13,7 +13,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle 8.4 (FIX 9.8 BUG)
+      - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.4'
@@ -29,6 +29,7 @@ jobs:
             nf=$(echo "$f" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_')
             cp "$f" "app/src/main/res/drawable/$nf" 2>/dev/null || true
           done
+          echo "=== ASSETS ==="
           ls app/src/main/res/drawable/
 
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
@@ -45,7 +46,6 @@ jobs:
           echo '<resources><string name="app_name">Jajan Crush V20</string></resources>' > app/src/main/res/values/strings.xml
           echo "android.useAndroidX=true" > gradle.properties
           echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> gradle.properties
-          echo "android.nonTransitiveRClass=true" >> gradle.properties
 
           cat > app/build.gradle << 'GRADLE'
           plugins { id 'com.android.application' }
@@ -72,8 +72,9 @@ jobs:
           SET
 
           echo ">>> Generating wrapper 8.4"
-          gradle wrapper --gradle-version 8.4 --distribution-type all
-          chmod +x./gradlew
+          gradle wrapper --gradle-version 8.4
+          chmod +x gradlew
+          ./gradlew --version
 
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
@@ -97,7 +98,7 @@ jobs:
               Random rnd=new Random();
               Bitmap[] jajanBmp=new Bitmap[8];
               Bitmap bgBmp, rianNormal, rianSeneng, rianCemas, rianNangis;
-              boolean showHappy=false, showSad=false;
+              boolean showHappy=false;
               int happyTimer=0;
               int w=0,h=0,cellW,cellH,gridX,gridY;
               float charX, charY;
@@ -128,7 +129,7 @@ jobs:
                 int jenis=5+(level/5); if(jenis>6) jenis=6;
                 grid=new int[ROWS][COLS];
                 for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++) grid[r][c]=rnd.nextInt(jenis);
-                movesTanpaJackpot=0; comboCount=0; showJackpot=false; isGameOver=false; isWin=false; showHappy=false; showSad=false;
+                movesTanpaJackpot=0; comboCount=0; showJackpot=false; isGameOver=false; isWin=false; showHappy=false;
                 if(gameOverCount>=3){ jackpotR=rnd.nextInt(ROWS); jackpotC=rnd.nextInt(COLS); showJackpot=true; }
                 invalidate();
               }
@@ -137,10 +138,10 @@ jobs:
                 boolean[][] del=new boolean[ROWS][COLS]; boolean found=false;
                 for(int r=0;r<ROWS;r++) for(int c=0;c<COLS-2;c++) if(grid[r][c]>=0 && grid[r][c]==grid[r][c+1] && grid[r][c]==grid[r][c+2]){ del[r][c]=del[r][c+1]=del[r][c+2]=true; found=true; }
                 for(int c=0;c<COLS;c++) for(int r=0;r<ROWS-2;r++) if(grid[r][c]>=0 && grid[r][c]==grid[r+1][c] && grid[r][c]==grid[r+2][c]){ del[r][c]=del[r+1][c]=del[r+2][c]=true; found=true; }
-                if(showJackpot && jackpotR>=0 && jackpotR<ROWS && jackpotC>=0 && del[jackpotR][jackpotC]){ score+=250+(level*10); moves+=2; showJackpot=false; showHappy=true; happyTimer=90; movesTanpaJackpot=0; }
+                if(showJackpot && jackpotR>=0 && del[jackpotR][jackpotC]){ score+=250+(level*10); moves+=2; showJackpot=false; showHappy=true; happyTimer=90; movesTanpaJackpot=0; }
                 if(found){
                   for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++) if(del[r][c]){ grid[r][c]=-1; score+=50+(comboCount*20); }
-                  for(int c=0;c<COLS;c++){ int wr=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][c]>=0) grid[wr--][c]=grid[r][c]; for(int r=wr;r>=0;r--) grid[r][c]=rnd.nextInt(5+(level/5)); }
+                  for(int c=0;c<COLS;c++){ int wr=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][c]>=0) grid[wr--][c]=grid[r][c]; for(int r=wr;r>=0;r--) grid[r][c]=rnd.nextInt(6); }
                   if(score>=target){ isWin=true; level++; gameOverCount=0; getContext().getSharedPreferences("jajan",0).edit().putInt("level",level).putInt("gameOverCount",0).apply(); }
                   return true;
                 }
@@ -152,11 +153,11 @@ jobs:
                 if(bgBmp!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(bgBmp,w,h,false),0,0,null); else canvas.drawColor(Color.rgb(76,175,80));
                 canvas.drawText("LVL "+level+" "+score+"/"+target,20,45,textPaint);
                 canvas.drawText("MOVES "+moves+" COMBO x"+comboCount,20,90,textPaint);
-                if(gameOverCount>=2) canvas.drawText("PITY BONUS AKTIF! x"+gameOverCount,20,135,textPaint);
+                if(gameOverCount>=2) canvas.drawText("PITY BONUS x"+gameOverCount,20,135,textPaint);
                 Bitmap cb=rianNormal;
                 if(showHappy && happyTimer>0){ cb=rianSeneng!=null?rianSeneng:rianNormal; float j=(float)Math.sin(happyTimer*0.4)*12f; happyTimer--; if(cb!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(cb,200,200,false),charX,charY+j,null); if(happyTimer<=0) showHappy=false; }
                 else if(isGameOver){ cb=rianNangis; if(cb!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(cb,210,210,false),charX,charY,null); }
-                else if(moves<=3 && moves>0){ cb=rianCemas; if(cb!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(cb,210,210,false),charX,charY,null); }
+                else if(moves<=3){ cb=rianCemas; if(cb!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(cb,210,210,false),charX,charY,null); }
                 else { if(cb!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(cb,190,190,false),charX,charY,null); }
                 for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){
                   int x=gridX+c*cellW, y=gridY+r*cellH;
@@ -164,8 +165,8 @@ jobs:
                   if(r==selR && c==selC){ Paint p=new Paint(); p.setColor(Color.YELLOW); p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(6); canvas.drawRect(x,y,x+cellW,y+cellH,p); }
                   if(showJackpot && r==jackpotR && c==jackpotC){ Paint jp=new Paint(); jp.setColor(Color.argb(170,255,215,0)); canvas.drawCircle(x+cellW/2,y+cellH/2,cellW/2-2,jp); Paint tp=new Paint(); tp.setColor(Color.RED); tp.setTextSize(18); tp.setTypeface(Typeface.DEFAULT_BOLD); tp.setTextAlign(Paint.Align.CENTER); canvas.drawText("JACKPOT",x+cellW/2,y+cellH/2+6,tp); }
                 }
-                if(isGameOver){ Paint bg=new Paint(); bg.setColor(Color.argb(190,0,0,0)); canvas.drawRect(0,0,w,h,bg); Paint big=new Paint(); big.setColor(Color.WHITE); big.setTextSize(56); big.setTypeface(Typeface.DEFAULT_BOLD); big.setTextAlign(Paint.Align.CENTER); canvas.drawText("GAME OVER",w/2,h/2-80,big); big.setTextSize(30); canvas.drawText("Level "+level+" Score "+score+"/"+target,w/2,h/2-10,big); if(gameOverCount>=3) canvas.drawText("NEXT: 2 JACKPOT +5 MOVES!",w/2,h/2+35,big); canvas.drawText("Tap untuk coba lagi",w/2,h/2+90,big); }
-                if(isWin){ Paint bg=new Paint(); bg.setColor(Color.argb(180,0,150,0)); canvas.drawRect(0,0,w,h,bg); Paint big=new Paint(); big.setColor(Color.WHITE); big.setTextSize(56); big.setTypeface(Typeface.DEFAULT_BOLD); big.setTextAlign(Paint.Align.CENTER); canvas.drawText("LEVEL CLEAR!",w/2,h/2-40,big); big.setTextSize(32); canvas.drawText("Lanjut Level "+level,w/2,h/2+20,big); canvas.drawText("Tap!",w/2,h/2+70,big); }
+                if(isGameOver){ Paint bg=new Paint(); bg.setColor(Color.argb(190,0,0,0)); canvas.drawRect(0,0,w,h,bg); Paint big=new Paint(); big.setColor(Color.WHITE); big.setTextSize(56); big.setTypeface(Typeface.DEFAULT_BOLD); big.setTextAlign(Paint.Align.CENTER); canvas.drawText("GAME OVER",w/2,h/2-80,big); big.setTextSize(30); canvas.drawText("Lv "+level+" "+score+"/"+target,w/2,h/2-10,big); if(gameOverCount>=3) canvas.drawText("NEXT: 2 JACKPOT +5 MOVES!",w/2,h/2+35,big); canvas.drawText("Tap lagi",w/2,h/2+90,big); }
+                if(isWin){ Paint bg=new Paint(); bg.setColor(Color.argb(180,0,150,0)); canvas.drawRect(0,0,w,h,bg); Paint big=new Paint(); big.setColor(Color.WHITE); big.setTextSize(56); big.setTypeface(Typeface.DEFAULT_BOLD); big.setTextAlign(Paint.Align.CENTER); canvas.drawText("CLEAR!",w/2,h/2-40,big); big.setTextSize(32); canvas.drawText("Lanjut Lv "+level,w/2,h/2+20,big); }
               }
               @Override public boolean onTouchEvent(MotionEvent e){
                 if(e.getAction()==MotionEvent.ACTION_DOWN){
@@ -173,7 +174,7 @@ jobs:
                   int c=(int)((e.getX()-gridX)/cellW), r=(int)((e.getY()-gridY)/cellH);
                   if(r<0||r>=ROWS||c<0||c>=COLS) return true;
                   if(selR==-1){ selR=r; selC=c; }
-                  else { if(Math.abs(selR-r)+Math.abs(selC-c)==1){ int tmp=grid[selR][selC]; grid[selR][selC]=grid[r][c]; grid[r][c]=tmp; if(!checkScore()){ int t=grid[selR][selC]; grid[selR][selC]=grid[r][c]; grid[r][c]=t; } else { moves--; movesTanpaJackpot++; if(checkScore()) comboCount++; else comboCount=0; int base=10+(level*3), pity=movesTanpaJackpot*10+(gameOverCount*12), tot=base+pity; if(tot>80) tot=80; if(rnd.nextInt(100)<tot || movesTanpaJackpot>=3){ spawnJackpot(); movesTanpaJackpot=0; } if(moves<=0 && score<target){ isGameOver=true; gameOverCount++; showSad=true; getContext().getSharedPreferences("jajan",0).edit().putInt("gameOverCount",gameOverCount).putInt("level",level).apply(); } } } selR=-1; selC=-1; }
+                  else { if(Math.abs(selR-r)+Math.abs(selC-c)==1){ int tmp=grid[selR][selC]; grid[selR][selC]=grid[r][c]; grid[r][c]=tmp; if(!checkScore()){ int t=grid[selR][selC]; grid[selR][selC]=grid[r][c]; grid[r][c]=t; } else { moves--; movesTanpaJackpot++; if(checkScore()) comboCount++; else comboCount=0; int base=10+(level*3), pity=movesTanpaJackpot*10+(gameOverCount*12), tot=base+pity; if(tot>80) tot=80; if(rnd.nextInt(100)<tot || movesTanpaJackpot>=3){ spawnJackpot(); movesTanpaJackpot=0; } if(moves<=0 && score<target){ isGameOver=true; gameOverCount++; getContext().getSharedPreferences("jajan",0).edit().putInt("gameOverCount",gameOverCount).putInt("level",level).apply(); } } } selR=-1; selC=-1; }
                   invalidate();
                 }
                 return true;
@@ -182,8 +183,9 @@ jobs:
           }
           JAVA
 
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
           cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V20-Final.apk
+          ls -lh *.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
