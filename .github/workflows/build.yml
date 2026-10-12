@@ -37,10 +37,10 @@ jobs:
             void addEffect(View v){
               v.setOnTouchListener((view, ev)->{
                 if(ev.getAction()==MotionEvent.ACTION_DOWN){
-                  view.animate().scaleX(0.88f).scaleY(0.88f).setDuration(100).start();
-                  view.setAlpha(0.6f);
+                  view.animate().scaleX(0.90f).scaleY(0.90f).setDuration(90).start();
+                  view.setAlpha(0.7f);
                 } else if(ev.getAction()==MotionEvent.ACTION_UP || ev.getAction()==MotionEvent.ACTION_CANCEL){
-                  view.animate().scaleX(1f).scaleY(1f).setDuration(150).start();
+                  view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
                   view.setAlpha(1f);
                 }
                 return false;
@@ -53,46 +53,63 @@ jobs:
               try{ int id=getResources().getIdentifier("splash_bg","drawable",getPackageName()); if(id!=0) bg.setImageResource(id);}catch(Exception e){}
               bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
               root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
-              LinearLayout row=new LinearLayout(this);
-              row.setOrientation(LinearLayout.HORIZONTAL);
-              row.setGravity(Gravity.CENTER);
-              FrameLayout.LayoutParams flp=new FrameLayout.LayoutParams(-1,-2);
-              flp.gravity=Gravity.BOTTOM|Gravity.CENTER;
-              flp.bottomMargin=555;
-              row.setLayoutParams(flp);
+
               Typeface tf = Typeface.create("serif", Typeface.BOLD);
+
+              // PLAY - PAS TENGAH PAPAN KECIL KIRI
               Button play=new Button(this);
               play.setText("PLAY");
               play.setTypeface(tf);
               play.getPaint().setFakeBoldText(true);
               play.setTextColor(Color.parseColor("#FFEFAF"));
-              play.setTextSize(25);
+              play.setTextSize(24);
               play.setAllCaps(false);
               play.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               play.setBackgroundColor(Color.TRANSPARENT);
               play.setGravity(Gravity.CENTER);
-              LinearLayout.LayoutParams lpp=new LinearLayout.LayoutParams(360,150);
-              lpp.leftMargin=15;
-              play.setLayoutParams(lpp);
               addEffect(play);
               play.setOnClickListener(v->{ startActivity(new Intent(SplashActivity.this, MainActivity.class)); finish(); });
+
+              // EXIT - PAS TENGAH PAPAN KECIL KANAN
               Button exit=new Button(this);
               exit.setText("EXIT");
               exit.setTypeface(tf);
               exit.getPaint().setFakeBoldText(true);
               exit.setTextColor(Color.parseColor("#FFEFAF"));
-              exit.setTextSize(25);
+              exit.setTextSize(24);
               exit.setAllCaps(false);
               exit.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               exit.setBackgroundColor(Color.TRANSPARENT);
               exit.setGravity(Gravity.CENTER);
-              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(360,150);
-              lp2.leftMargin=70;
-              exit.setLayoutParams(lp2);
               addEffect(exit);
               exit.setOnClickListener(v-> finishAffinity());
-              row.addView(play); row.addView(exit);
-              root.addView(row);
+
+              root.addView(play);
+              root.addView(exit);
+
+              root.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener(){
+                public void onGlobalLayout(){
+                  int w=root.getWidth(), h=root.getHeight();
+                  if(w==0) return;
+                  // HITUNG PAS TENGAH PAPAN KECIL DARI GAMBAR ASLI LU
+                  int pw=(int)(w*0.395f);
+                  int ph=(int)(h*0.068f);
+                  int topY=(int)(h*0.698f);
+                  int leftPlay=(int)(w*0.057f);
+                  int leftExit=(int)(w*0.545f);
+
+                  FrameLayout.LayoutParams lpPlay=new FrameLayout.LayoutParams(pw, ph);
+                  lpPlay.leftMargin=leftPlay;
+                  lpPlay.topMargin=topY;
+                  play.setLayoutParams(lpPlay);
+
+                  FrameLayout.LayoutParams lpExit=new FrameLayout.LayoutParams(pw, ph);
+                  lpExit.leftMargin=leftExit;
+                  lpExit.topMargin=topY;
+                  exit.setLayoutParams(lpExit);
+                }
+              });
+
               setContentView(root);
             }
           }
@@ -199,8 +216,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 31
-                  versionName "V14-BALIK-PAS"
+                  versionCode 32
+                  versionName "V15-CENTER-PRECISE"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -218,7 +235,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V14" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V15" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -237,5 +254,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V14-BALIK-PAS
+          name: jajan-crush-V15-CENTER-PRECISE
           path: app/build/outputs/apk/debug/app-debug.apk
