@@ -21,8 +21,59 @@ jobs:
           cp jajan04.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan05.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan06.png app/src/main/res/drawable/ 2>/dev/null || true
+          # Splash baru
+          if [ -f splash.png ]; then cp splash.png app/src/main/res/drawable/splash_bg.png; fi
           if [ -f music.mp3 ]; then cp music.mp3 app/src/main/res/raw/music.mp3; fi
-          if [ -f icon.png ]; then cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-mdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xhdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png; fi
+          if [ -f icon.png ]; then cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-mdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xhdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png; cp icon.png app/src/main/res/drawable/ic_launcher.png; fi
+
+          cat > app/src/main/java/com/rians/jajancrush/SplashActivity.java << 'SPLASH'
+          package com.rians.jajancrush;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.os.Bundle;
+          import android.os.Handler;
+          import android.widget.*;
+          import android.view.Gravity;
+          import android.graphics.Color;
+          public class SplashActivity extends Activity{
+            protected void onCreate(Bundle b){
+              super.onCreate(b);
+              FrameLayout root=new FrameLayout(this);
+              ImageView bg=new ImageView(this);
+              try{
+                int id=getResources().getIdentifier("splash_bg","drawable",getPackageName());
+                if(id!=0) bg.setImageResource(id);
+                else {
+                  int bg2=getResources().getIdentifier("bg_desa","drawable",getPackageName());
+                  if(bg2!=0) bg.setImageResource(bg2);
+                }
+              }catch(Exception e){}
+              bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
+              root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
+
+              LinearLayout center=new LinearLayout(this);
+              center.setOrientation(LinearLayout.VERTICAL);
+              center.setGravity(Gravity.CENTER);
+              TextView loading=new TextView(this);
+              loading.setText("Loading...");
+              loading.setTextColor(Color.parseColor("#FFCA28"));
+              loading.setTextSize(18);
+              loading.setGravity(Gravity.CENTER);
+              FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(-1,-1);
+              lp.bottomMargin=200;
+              center.setLayoutParams(lp);
+              center.addView(loading);
+              root.addView(center);
+              setContentView(root);
+
+              new Handler().postDelayed(()->{
+                startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                finish();
+              }, 2500);
+            }
+          }
+          SPLASH
+
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVAEOF'
           package com.rians.jajancrush;
           import android.app.Activity;
@@ -57,7 +108,6 @@ jobs:
               void saveGame(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.putInt("score",score); ed.putInt("moves",moves); ed.putInt("target",target); ed.putInt("fail",failCount); StringBuilder sb=new StringBuilder(); for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) sb.append(grid[r][cc]).append(","); ed.putString("grid",sb.toString()); ed.apply(); }catch(Exception e){} }
               boolean loadGame(){ try{ if(!prefs.contains("grid")) return false; level=prefs.getInt("level",1); score=prefs.getInt("score",0); moves=prefs.getInt("moves",28); target=prefs.getInt("target",500); failCount=prefs.getInt("fail",0); String s=prefs.getString("grid",""); if(s.length()<10) return false; String[] ar=s.split(","); int idx=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(idx<ar.length) grid[r][cc]=Integer.parseInt(ar[idx]); idx++; } return true; }catch(Exception e){} return false; }
               void toggleMute(){ isMuted=!isMuted; try{ prefs.edit().putBoolean("mute",isMuted).apply(); }catch(Exception e){} try{ if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); } else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); } }catch(Exception e){} }
-              // FIX: INFINITE LEVEL - gak ada batas level 8
               void initGridSameLevel(){ int types=Math.min(5+level/2,6); for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int v; do{ v=(int)(Math.random()*types); grid[r][cc]=v; }while((r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc])||(cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2])); } int tries=0; while(!hasPossibleMoves()&&tries<50){ shuffleGrid(); tries++; } score=0; moves=Math.max(28-(level-1)*2,12); failCount=0; jackpotReady=false; selR=-1; selC=-1; isGameOver=false; saveGame(); }
               void initGrid(){ target=500+(level-1)*150; initGridSameLevel(); }
               void shuffleGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) grid[r][cc]=(int)(Math.random()*Math.min(5+level/2,6)); }
@@ -126,8 +176,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 21
-                  versionName "V5-Infinite"
+                  versionCode 22
+                  versionName "V5-Infinite-Splash"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -144,7 +194,14 @@ jobs:
           include ':app'
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Jajan Crush V5" android:icon="@mipmap/ic_launcher"><activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application android:label="Jajan Crush V5" android:icon="@mipmap/ic_launcher">
+              <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+              </activity>
+              <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
+            </application>
+          </manifest>
           MANIFEST
       - name: Build APK
         run: |
@@ -157,5 +214,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-v5-infinite
+          name: jajan-crush-v5-splash-infinite
           path: app/build/outputs/apk/debug/app-debug.apk
