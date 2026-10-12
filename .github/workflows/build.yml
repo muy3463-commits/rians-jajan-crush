@@ -1,4 +1,4 @@
-name: Build Jajan Crush V6 Infinite
+name: Build V6.2 Musik Jackpot
 
 on: [push]
 
@@ -12,10 +12,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build APK V6 Infinite No Geter
+      - name: Build APK V6.2 Musik Jackpot Infinite
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/raw
 
           cp bg_desa.png app/src/main/res/drawable/
           cp jajan01.png app/src/main/res/drawable/
@@ -25,6 +26,8 @@ jobs:
           cp jajan05.png app/src/main/res/drawable/
           cp jajan06.png app/src/main/res/drawable/
           cp icon.png app/src/main/res/drawable/ic_launcher.png
+          cp music.mp3 app/src/main/res/raw/music.mp3
+          cp music.mp3 app/src/main/res/raw/jackpot.mp3
 
           cat > settings.gradle << 'SET'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
@@ -41,7 +44,7 @@ jobs:
           android {
             namespace 'com.rians.jajancrush'
             compileSdk 34
-            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 6; versionName "V6-Infinite" }
+            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 62; versionName "V6.2-Musik" }
           }
           APP
 
@@ -57,10 +60,11 @@ jobs:
 
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
-          import android.app.Activity; import android.os.Bundle; import android.widget.*; import android.view.*; import android.graphics.*; import java.util.*;
+          import android.app.Activity; import android.os.Bundle; import android.widget.*; import android.view.*; import android.graphics.*; import android.media.MediaPlayer; import java.util.*;
           public class MainActivity extends Activity {
             int level=1, score=0, target=500, moves=18, rows=6, cols=6; int[][] board; ImageView[][] grid; int[] jajans;
             TextView tvLevel, tvScore, tvTarget, tvMoves; LinearLayout boardLayout; Random rand=new Random();
+            MediaPlayer bgMusic, jackpotSound;
             protected void onCreate(Bundle b){ super.onCreate(b);
               jajans=new int[]{R.drawable.jajan01,R.drawable.jajan02,R.drawable.jajan03,R.drawable.jajan04,R.drawable.jajan05,R.drawable.jajan06};
               LinearLayout root=new LinearLayout(this); root.setOrientation(1); root.setBackgroundResource(R.drawable.bg_desa); root.setGravity(Gravity.CENTER);
@@ -69,8 +73,15 @@ jobs:
               tvScore=infoText(" Score: 0 "); tvTarget=infoText(" Target: "+target+" "); tvMoves=infoText(" Moves: "+moves+" ");
               info.addView(tvScore); info.addView(tvTarget); info.addView(tvMoves); root.addView(info);
               boardLayout=new LinearLayout(this); boardLayout.setOrientation(1); boardLayout.setGravity(17); root.addView(boardLayout);
-              setContentView(root); initBoard(); drawBoard();
+              setContentView(root);
+              // MUSIK BACKGROUND - LOOP TERUS
+              try{ bgMusic=MediaPlayer.create(this,R.raw.music); bgMusic.setLooping(true); bgMusic.setVolume(0.5f,0.5f); bgMusic.start(); }catch(Exception e){}
+              try{ jackpotSound=MediaPlayer.create(this,R.raw.jackpot); }catch(Exception e){}
+              initBoard(); drawBoard();
             }
+            protected void onPause(){ super.onPause(); if(bgMusic!=null) bgMusic.pause(); }
+            protected void onResume(){ super.onResume(); if(bgMusic!=null) bgMusic.start(); }
+            protected void onDestroy(){ super.onDestroy(); if(bgMusic!=null) bgMusic.release(); if(jackpotSound!=null) jackpotSound.release(); }
             TextView infoText(String s){ TextView tv=new TextView(this); tv.setText(s); tv.setTextColor(Color.WHITE); tv.setPadding(15,5,15,5); tv.setBackgroundColor(Color.argb(150,0,0,0)); return tv; }
             void initBoard(){ board=new int[rows][cols]; for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) board[r][c]=rand.nextInt(6); }
             void drawBoard(){ boardLayout.removeAllViews(); grid=new ImageView[rows][cols];
@@ -80,8 +91,16 @@ jobs:
             void onClick(int r,int c){ if(selR==-1){ selR=r; selC=c; grid[r][c].setBackgroundColor(Color.YELLOW); } else {
                 if(Math.abs(selR-r)+Math.abs(selC-c)==1){ int tmp=board[selR][selC]; board[selR][selC]=board[r][c]; board[r][c]=tmp; moves--; score+=50; checkWin(); }
                 if(selR>=0) grid[selR][selC].setBackgroundColor(0); selR=-1; selC=-1; drawBoard(); } }
-            void checkWin(){ if(score>=target){ level++; target=500+(level-1)*250; score=0; moves=18; Toast.makeText(this,"LEVEL "+level+"! Gak ada tamatnya lur! ♾️",1).show(); initBoard(); } if(moves<=0){ Toast.makeText(this,"Game Over! Ulang Level "+level,1).show(); score=0; moves=18; initBoard(); } }
-            void updateUI(){ tvLevel.setText("Rian's Jajan Crush - Level "+level+" ♾️"); tvScore.setText(" Score: "+score+" "); tvTarget.setText(" Target: "+target+" "); tvMoves.setText(" Moves: "+moves+" "); }
+            void checkWin(){
+              if(score>=target){
+                level++; target=500+(level-1)*250; score=0; moves=18;
+                // JACKPOT SOUND!
+                try{ if(jackpotSound!=null){ jackpotSound.seekTo(0); jackpotSound.start(); } }catch(Exception e){}
+                Toast.makeText(this,"🎰 JACKPOT! LEVEL "+level+"! ♾️",1).show(); initBoard();
+              }
+              if(moves<=0){ Toast.makeText(this,"Game Over! Ulang Level "+level,1).show(); score=0; moves=18; initBoard(); }
+            }
+            void updateUI(){ tvLevel.setText("Rian's Jajan Crush - Level "+level+" ♾️ 🎵"); tvScore.setText(" Score: "+score+" "); tvTarget.setText(" Target: "+target+" "); tvMoves.setText(" Moves: "+moves+" "); }
           }
           JAVA
 
@@ -92,5 +111,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: JajanCrush-V6-Infinite
+          name: JajanCrush-V6.2-Musik-Jackpot
           path: app/build/outputs/apk/debug/app-debug.apk
