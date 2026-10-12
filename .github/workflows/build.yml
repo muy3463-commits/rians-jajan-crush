@@ -1,4 +1,4 @@
-name: Build V6.4 Final V5 Cakep
+name: Build V6.5 Fix Touch Rapih
 
 on: [push]
 
@@ -12,7 +12,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build APK Final
+      - name: Build V6.5 Rapih Bisa Sentuh
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
@@ -38,11 +38,7 @@ jobs:
           ROOT
           cat > app/build.gradle << 'APP'
           plugins { id 'com.android.application' }
-          android {
-            namespace 'com.rians.jajancrush'
-            compileSdk 34
-            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 64; versionName "V6.4-Final" }
-          }
+          android { namespace 'com.rians.jajancrush'; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 65; versionName "V6.5-Fix" } }
           APP
           cat > app/src/main/AndroidManifest.xml << 'MAN'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -56,21 +52,12 @@ jobs:
 
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.widget.*;
-          import android.view.*;
-          import android.graphics.*;
-          import android.graphics.drawable.GradientDrawable;
-          import android.media.MediaPlayer;
-          import java.util.Random;
+          import android.app.Activity; import android.os.Bundle; import android.widget.*; import android.view.*; import android.graphics.*; import android.graphics.drawable.GradientDrawable; import android.media.MediaPlayer; import java.util.Random;
 
           public class MainActivity extends Activity {
               int level=6, score=0, target=1250, moves=18, rows=6, cols=5;
-              int[][] board; ImageView[][] grid; int[] jajans;
-              Random rand=new Random();
-              TextView tvLevel, tvScore, tvMoves;
-              LinearLayout boardLayout;
+              int[][] board; ImageView[][] grid; int[] jajans; Random rand=new Random();
+              TextView tvLevel, tvScore, tvMoves; LinearLayout boardLayout;
               MediaPlayer bgMusic, jackpotSound;
 
               @Override
@@ -79,14 +66,13 @@ jobs:
                   jajans=new int[]{R.drawable.jajan01,R.drawable.jajan02,R.drawable.jajan03,R.drawable.jajan04,R.drawable.jajan05,R.drawable.jajan06};
 
                   FrameLayout root=new FrameLayout(this);
-                  ImageView bg=new ImageView(this);
-                  bg.setImageResource(R.drawable.bg_desa);
-                  bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                  ImageView bg=new ImageView(this); bg.setImageResource(R.drawable.bg_desa); bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
                   root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
 
-                  // TOP UI
+                  // --- TOP UI - HANYA 380dp TINGGINYA BIAR GAK NUTUPIN JAJAN ---
                   RelativeLayout top=new RelativeLayout(this);
-                  top.setLayoutParams(new FrameLayout.LayoutParams(-1,-1));
+                  FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(-1, dp(380));
+                  top.setLayoutParams(topLp);
 
                   LinearLayout boxLevel = createBox("LEVEL", String.valueOf(level));
                   LinearLayout boxScore = createBox("SCORE", score+"/"+target);
@@ -95,77 +81,67 @@ jobs:
                   tvScore = (TextView) boxScore.getChildAt(1);
                   tvMoves = (TextView) boxMoves.getChildAt(1);
 
-                  RelativeLayout.LayoutParams pLevel = new RelativeLayout.LayoutParams(dp(140), dp(70));
-                  pLevel.setMargins(dp(12), dp(12), 0, 0);
-                  RelativeLayout.LayoutParams pScore = new RelativeLayout.LayoutParams(dp(140), dp(70));
+                  RelativeLayout.LayoutParams pLevel = new RelativeLayout.LayoutParams(dp(130), dp(62));
+                  pLevel.setMargins(dp(10), dp(10), 0, 0);
+                  RelativeLayout.LayoutParams pScore = new RelativeLayout.LayoutParams(dp(130), dp(62));
                   pScore.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                  pScore.setMargins(0, dp(12), dp(12), 0);
-                  RelativeLayout.LayoutParams pMoves = new RelativeLayout.LayoutParams(dp(140), dp(70));
-                  pMoves.setMargins(dp(12), dp(95), 0, 0);
-
-                  RelativeLayout.LayoutParams pMusic = new RelativeLayout.LayoutParams(dp(70), dp(70));
+                  pScore.setMargins(0, dp(10), dp(10), 0);
+                  RelativeLayout.LayoutParams pMoves = new RelativeLayout.LayoutParams(dp(130), dp(62));
+                  pMoves.setMargins(dp(10), dp(84), 0, 0);
+                  RelativeLayout.LayoutParams pMusic = new RelativeLayout.LayoutParams(dp(62), dp(62));
                   pMusic.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                  pMusic.setMargins(0, dp(95), dp(30), 0);
-                  TextView btnMusic = createMusicBtn();
+                  pMusic.setMargins(0, dp(84), dp(24), 0);
 
-                  top.addView(boxLevel, pLevel);
-                  top.addView(boxScore, pScore);
-                  top.addView(boxMoves, pMoves);
-                  top.addView(btnMusic, pMusic);
+                  TextView btnMusic = createMusicBtn();
+                  top.addView(boxLevel, pLevel); top.addView(boxScore, pScore);
+                  top.addView(boxMoves, pMoves); top.addView(btnMusic, pMusic);
                   root.addView(top);
 
-                  // BOARD CONTAINER - DI BAWAH PAPAN NAMA BIAR GAK NUMPUK
+                  // --- BOARD - POSISI PERSIS DI BAWAH PAPAN NAMA ---
                   LinearLayout container = new LinearLayout(this);
                   container.setOrientation(LinearLayout.VERTICAL);
                   container.setGravity(Gravity.CENTER_HORIZONTAL);
                   FrameLayout.LayoutParams contLp = new FrameLayout.LayoutParams(-1,-1);
-                  contLp.topMargin = dp(360); // ini kunci biar di bawah tulisan Rian's jajan Crush
+                  contLp.topMargin = dp(345);
                   container.setLayoutParams(contLp);
-                  container.setPadding(dp(8),0,dp(8),0);
+                  container.setPadding(dp(10), dp(4), dp(10), dp(10));
 
                   boardLayout = new LinearLayout(this);
                   boardLayout.setOrientation(LinearLayout.VERTICAL);
-                  boardLayout.setBackgroundColor(Color.argb(160, 62, 39, 35));
                   GradientDrawable boardBg = new GradientDrawable();
-                  boardBg.setColor(Color.argb(160, 62, 39, 35));
-                  boardBg.setCornerRadius(dp(8));
-                  boardBg.setStroke(3, Color.parseColor("#5D4037"));
+                  boardBg.setColor(Color.parseColor("#6D4C41")); // coklat solid kayak V5!
+                  boardBg.setCornerRadius(dp(6));
+                  boardBg.setStroke(2, Color.parseColor("#4E342E"));
                   boardLayout.setBackground(boardBg);
 
-                  container.addView(boardLayout);
+                  container.addView(boardLayout, new LinearLayout.LayoutParams(-1,-2));
                   root.addView(container);
 
                   setContentView(root);
 
-                  try{ bgMusic=MediaPlayer.create(this,R.raw.music); bgMusic.setLooping(true); bgMusic.setVolume(0.5f,0.5f); bgMusic.start(); }catch(Exception e){}
+                  try{ bgMusic=MediaPlayer.create(this,R.raw.music); bgMusic.setLooping(true); bgMusic.setVolume(0.4f,0.4f); bgMusic.start(); }catch(Exception e){}
                   try{ jackpotSound=MediaPlayer.create(this,R.raw.jackpot); }catch(Exception e){}
-
-                  btnMusic.setOnClickListener(v->{
-                      if(bgMusic!=null){
-                          if(bgMusic.isPlaying()){ bgMusic.pause(); v.setAlpha(0.5f); }
-                          else { bgMusic.start(); v.setAlpha(1f); }
-                      }
-                  });
+                  btnMusic.setOnClickListener(v->{ if(bgMusic!=null){ if(bgMusic.isPlaying()){bgMusic.pause(); v.setAlpha(0.5f);} else {bgMusic.start(); v.setAlpha(1f);} } });
 
                   initBoard(); drawBoard();
               }
 
               LinearLayout createBox(String title, String value){
                   GradientDrawable gd = new GradientDrawable();
-                  gd.setColor(Color.argb(230, 62, 39, 35));
-                  gd.setCornerRadius(dp(8));
+                  gd.setColor(Color.parseColor("#3E2723")); // SOLID gelap kayak V5, bukan transparan!
+                  gd.setCornerRadius(dp(6));
                   gd.setStroke(2, Color.parseColor("#FFD700"));
                   LinearLayout ll = new LinearLayout(this);
                   ll.setOrientation(LinearLayout.VERTICAL);
                   ll.setGravity(Gravity.CENTER);
                   ll.setBackground(gd);
-                  ll.setPadding(dp(4),dp(6),dp(4),dp(6));
+                  ll.setPadding(dp(2),dp(4),dp(2),dp(4));
                   TextView tTitle = new TextView(this);
-                  tTitle.setText(title); tTitle.setTextColor(Color.parseColor("#FFD700"));
-                  tTitle.setTextSize(11); tTitle.setGravity(Gravity.CENTER); tTitle.setTypeface(null, Typeface.BOLD);
+                  tTitle.setText(title); tTitle.setTextColor(Color.parseColor("#FFC107"));
+                  tTitle.setTextSize(10); tTitle.setGravity(Gravity.CENTER); tTitle.setTypeface(null, Typeface.BOLD);
                   TextView tVal = new TextView(this);
                   tVal.setText(value); tVal.setTextColor(Color.WHITE);
-                  tVal.setTextSize(18); tVal.setGravity(Gravity.CENTER); tVal.setTypeface(null, Typeface.BOLD);
+                  tVal.setTextSize(16); tVal.setGravity(Gravity.CENTER); tVal.setTypeface(null, Typeface.BOLD);
                   ll.addView(tTitle); ll.addView(tVal);
                   return ll;
               }
@@ -173,10 +149,10 @@ jobs:
               TextView createMusicBtn(){
                   GradientDrawable gd = new GradientDrawable();
                   gd.setShape(GradientDrawable.OVAL);
-                  gd.setColor(Color.argb(230, 62, 39, 35));
+                  gd.setColor(Color.parseColor("#3E2723"));
                   gd.setStroke(2, Color.parseColor("#FFD700"));
                   TextView tv = new TextView(this);
-                  tv.setText("♪"); tv.setTextSize(24); tv.setTextColor(Color.parseColor("#FFD700"));
+                  tv.setText("♪"); tv.setTextSize(20); tv.setTextColor(Color.parseColor("#FFD700"));
                   tv.setGravity(Gravity.CENTER); tv.setBackground(gd);
                   return tv;
               }
@@ -187,20 +163,26 @@ jobs:
 
               void drawBoard(){
                   boardLayout.removeAllViews(); grid=new ImageView[rows][cols];
-                  int size = (getResources().getDisplayMetrics().widthPixels - dp(32)) / 5;
+                  int size = (getResources().getDisplayMetrics().widthPixels - dp(24)) / 5;
                   for(int r=0;r<rows;r++){
                       LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
                       for(int c=0;c<cols;c++){
                           final int rr=r, cc=c;
                           FrameLayout cell = new FrameLayout(this);
-                          cell.setBackgroundColor(Color.argb(30,0,0,0));
+                          cell.setBackgroundColor(Color.parseColor("#5D4037"));
+                          GradientDrawable cellBg = new GradientDrawable();
+                          cellBg.setColor(Color.parseColor("#8D6E63"));
+                          cellBg.setStroke(1, Color.parseColor("#4E342E"));
+                          cell.setBackground(cellBg);
                           ImageView iv = new ImageView(this);
                           iv.setImageResource(jajans[board[r][c]]);
                           iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                          iv.setPadding(dp(4),dp(4),dp(4),dp(4));
+                          iv.setPadding(dp(6),dp(6),dp(6),dp(6));
                           cell.addView(iv, new FrameLayout.LayoutParams(-1,-1));
                           iv.setOnClickListener(v->onClick(rr,cc));
-                          row.addView(cell, new LinearLayout.LayoutParams(size, size));
+                          LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+                          lp.setMargins(1,1,1,1);
+                          row.addView(cell, lp);
                           grid[r][c]=iv;
                       }
                       boardLayout.addView(row);
@@ -210,13 +192,13 @@ jobs:
 
               int selR=-1, selC=-1;
               void onClick(int r,int c){
-                  if(selR==-1){ selR=r; selC=c; grid[r][c].setAlpha(0.5f); }
+                  if(selR==-1){ selR=r; selC=c; grid[r][c].setBackgroundColor(Color.YELLOW); }
                   else {
                       if(Math.abs(selR-r)+Math.abs(selC-c)==1){
                           int tmp=board[selR][selC]; board[selR][selC]=board[r][c]; board[r][c]=tmp;
                           moves--; score+=50; checkWin();
                       }
-                      if(selR>=0 && selR<rows && selC>=0 && selC<cols) grid[selR][selC].setAlpha(1f);
+                      if(selR>=0) grid[selR][selC].setBackgroundColor(Color.TRANSPARENT);
                       selR=-1; selC=-1; drawBoard();
                   }
               }
@@ -225,7 +207,7 @@ jobs:
                   if(score>=target){
                       level++; target+=250; score=0; moves=18;
                       try{ if(jackpotSound!=null){ jackpotSound.seekTo(0); jackpotSound.start(); } }catch(Exception e){}
-                      Toast.makeText(this,"🎰 JACKPOT! LEVEL "+level+"! ♾️",Toast.LENGTH_LONG).show();
+                      Toast.makeText(this,"🎰 JACKPOT! LEVEL "+level+" ♾️",Toast.LENGTH_LONG).show();
                       initBoard();
                   }
                   if(moves<=0){ Toast.makeText(this,"Game Over! Ulang Level "+level,Toast.LENGTH_SHORT).show(); score=0; moves=18; initBoard(); }
@@ -236,7 +218,6 @@ jobs:
                   if(tvScore!=null) tvScore.setText(score+"/"+target);
                   if(tvMoves!=null) tvMoves.setText(String.valueOf(moves));
               }
-
               protected void onPause(){ super.onPause(); if(bgMusic!=null) bgMusic.pause(); }
               protected void onResume(){ super.onResume(); if(bgMusic!=null) bgMusic.start(); }
               protected void onDestroy(){ super.onDestroy(); if(bgMusic!=null) bgMusic.release(); if(jackpotSound!=null) jackpotSound.release(); }
@@ -250,5 +231,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: JajanCrush-V6.4-FINAL-V5-Cakep
+          name: JajanCrush-V6.5-Rapih-BisaSentuh
           path: app/build/outputs/apk/debug/app-debug.apk
