@@ -1,80 +1,114 @@
-name: Build Rians Jajan Crush V20
+name: Build Rians Jajan Crush V22
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
       - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.4'
-
-      - name: Build APK V20 Infinite + Pity Jackpot
+      - name: Build APK V22 Menu Tombol Aktif
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/values
-
+          mkdir -p app/src/main/res/raw
           for f in *.png *.jpg *.jpeg; do
             [ -e "$f" ] || continue
             nf=$(echo "$f" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_')
             cp "$f" "app/src/main/res/drawable/$nf" 2>/dev/null || true
           done
-          echo "=== ASSETS ==="
-          ls app/src/main/res/drawable/
+          cp music.mp3 app/src/main/res/raw/ 2>/dev/null || true
 
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.rians.jajancrush">
-            <application android:allowBackup="true" android:label="Jajan Crush V20" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-              <activity android:name=".MainActivity" android:exported="true">
+            <application android:allowBackup="true" android:label="Rian Jajan Crush" android:icon="@drawable/icon" android:roundIcon="@drawable/icon" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+              <activity android:name=".SplashActivity" android:exported="true">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
+              <activity android:name=".MainActivity" android:exported="true"/>
             </application>
           </manifest>
           MANIFEST
 
-          echo '<resources><string name="app_name">Jajan Crush V20</string></resources>' > app/src/main/res/values/strings.xml
+          echo '<resources><string name="app_name">Rian Jajan Crush</string></resources>' > app/src/main/res/values/strings.xml
           echo "android.useAndroidX=true" > gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> gradle.properties
-
+          echo "org.gradle.jvmargs=-Xmx2g" >> gradle.properties
           cat > app/build.gradle << 'GRADLE'
           plugins { id 'com.android.application' }
           android {
             namespace 'com.rians.jajancrush'
             compileSdk 34
-            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 21; versionName "21.0" }
+            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 23; versionName "23.0" }
             buildTypes { release { minifyEnabled false } }
           }
           dependencies {}
           GRADLE
-
           cat > build.gradle << 'GRADLE2'
           plugins { id 'com.android.application' version '8.1.0' apply false }
           GRADLE2
-
           cat > settings.gradle << 'SET'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-          dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories { google(); mavenCentral() }
-          }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
           include ':app'
           SET
-
-          echo ">>> Generating wrapper 8.4"
           gradle wrapper --gradle-version 8.4
           chmod +x gradlew
-          ./gradlew --version
+
+          # ===== SPLASH + MENU TOMBOL AKTIF =====
+          cat > app/src/main/java/com/rians/jajancrush/SplashActivity.java << 'JAVA'
+          package com.rians.jajancrush;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.graphics.*;
+          import android.os.Bundle;
+          import android.view.MotionEvent;
+          import android.view.View;
+          public class SplashActivity extends Activity {
+            Bitmap splash;
+            int w,h;
+            @Override protected void onCreate(Bundle b){
+              super.onCreate(b);
+              try{
+                int id=getResources().getIdentifier("splash","drawable",getPackageName());
+                if(id!=0) splash=BitmapFactory.decodeResource(getResources(),id);
+              }catch(Exception e){}
+              View v=new View(this){
+                @Override protected void onDraw(Canvas c){
+                  if(splash!=null) c.drawBitmap(Bitmap.createScaledBitmap(splash,getWidth(),getHeight(),false),0,0,null);
+                  else c.drawColor(Color.rgb(60,30,10));
+                }
+              };
+              v.setOnTouchListener(new View.OnTouchListener(){
+                @Override public boolean onTouch(View view, MotionEvent e){
+                  if(e.getAction()==MotionEvent.ACTION_DOWN){
+                    w=view.getWidth(); h=view.getHeight();
+                    float x=e.getX(), y=e.getY();
+                    // Tombol PLAY kiri bawah, EXIT kanan bawah
+                    boolean isBottom = y > h*0.68 && y < h*0.84;
+                    boolean isPlay = x > w*0.08 && x < w*0.48 && isBottom;
+                    boolean isExit = x > w*0.52 && x < w*0.92 && isBottom;
+                    if(isPlay){
+                      startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                    } else if(isExit){
+                      finishAffinity();
+                    }
+                  }
+                  return true;
+                }
+              });
+              setContentView(v);
+            }
+          }
+          JAVA
 
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
@@ -98,10 +132,8 @@ jobs:
               Random rnd=new Random();
               Bitmap[] jajanBmp=new Bitmap[8];
               Bitmap bgBmp, rianNormal, rianSeneng, rianCemas, rianNangis;
-              boolean showHappy=false;
-              int happyTimer=0;
-              int w=0,h=0,cellW,cellH,gridX,gridY;
-              float charX, charY;
+              boolean showHappy=false; int happyTimer=0;
+              int w=0,h=0,cellW,cellH,gridX,gridY; float charX, charY;
               Paint textPaint=new Paint();
               public GameView(Context c){
                 super(c);
@@ -109,12 +141,10 @@ jobs:
                   jajanBmp[0]=dec("jajan01"); jajanBmp[1]=dec("jajan02"); jajanBmp[2]=dec("jajan03");
                   jajanBmp[3]=dec("jajan04"); jajanBmp[4]=dec("jajan05"); jajanBmp[5]=dec("jajan06");
                   bgBmp=dec("bg_desa"); if(bgBmp==null) bgBmp=dec("bg");
-                  rianNormal=dec("rian_normal"); rianSeneng=dec("rian_seneng");
-                  rianCemas=dec("rian_panik"); if(rianCemas==null) rianCemas=dec("rian_cemas");
+                  rianNormal=dec("rian_normal"); if(rianNormal==null) rianNormal=dec("rian_nangis");
+                  rianSeneng=dec("rian_seneng"); rianCemas=dec("rian_panik"); if(rianCemas==null) rianCemas=dec("rian_cemas");
                   rianNangis=dec("rian_nangis");
-                  if(rianNormal==null) rianNormal=rianSeneng;
-                  if(rianCemas==null) rianCemas=rianNormal;
-                  if(rianNangis==null) rianNangis=rianNormal;
+                  if(rianNormal==null) rianNormal=rianSeneng; if(rianCemas==null) rianCemas=rianNormal; if(rianNangis==null) rianNangis=rianNormal;
                 }catch(Exception e){}
                 SharedPreferences sp=getContext().getSharedPreferences("jajan",0);
                 level=sp.getInt("level",1); gameOverCount=sp.getInt("gameOverCount",0);
@@ -182,14 +212,12 @@ jobs:
             }
           }
           JAVA
-
           ./gradlew assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V20-Final.apk
+          cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V22-Play-Exit.apk
           ls -lh *.apk
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rians-Jajan-Crush-V20-Final
+          name: Rians-Jajan-Crush-V22-Play-Exit
           path: "*.apk"
           retention-days: 7
