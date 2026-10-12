@@ -7,9 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -18,9 +16,7 @@ jobs:
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/raw
 
-          # copy aset lu yang di root ke drawable
           cp bg_desa.png app/src/main/res/drawable/
           cp jajan01.png app/src/main/res/drawable/
           cp jajan02.png app/src/main/res/drawable/
@@ -29,11 +25,28 @@ jobs:
           cp jajan05.png app/src/main/res/drawable/
           cp jajan06.png app/src/main/res/drawable/
           cp icon.png app/src/main/res/drawable/ic_launcher.png
-          cp music.mp3 app/src/main/res/raw/ 2>/dev/null || echo "no music"
 
-          # AndroidManifest tanpa vibrate permission!
+          cat > settings.gradle << 'SET'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          include ':app'
+          SET
+
+          cat > build.gradle << 'ROOT'
+          plugins { id 'com.android.application' version '8.1.4' apply false }
+          ROOT
+
+          cat > app/build.gradle << 'APP'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.rians.jajancrush'
+            compileSdk 34
+            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 6; versionName "V6-Infinite" }
+          }
+          APP
+
           cat > app/src/main/AndroidManifest.xml << 'MAN'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.rians.jajancrush">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application android:label="Rian's Jajan Crush" android:icon="@drawable/ic_launcher">
               <activity android:name=".MainActivity" android:exported="true">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
@@ -42,13 +55,6 @@ jobs:
           </manifest>
           MAN
 
-          # build.gradle
-          cat > app/build.gradle << 'GRD'
-          plugins { id 'com.android.application' }
-          android { compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 6; versionName "V6-Infinite" } }
-          GRD
-
-          # MainActivity V6 INFINITE - GAK ADA TAMATNYA - NO GETER
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
           import android.app.Activity; import android.os.Bundle; import android.widget.*; import android.view.*; import android.graphics.*; import java.util.*;
@@ -79,8 +85,6 @@ jobs:
           }
           JAVA
 
-          # settings & wrapper build
-          echo "include ':app'" > settings.gradle
           cd /tmp && wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip && unzip -q gradle-8.4-bin.zip
           export PATH=/tmp/gradle-8.4/bin:$PATH
           cd $GITHUB_WORKSPACE
