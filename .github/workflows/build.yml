@@ -87,7 +87,7 @@ jobs:
                   int pw=(int)(w*0.395f);
                   int ph=(int)(h*0.072f);
                   int topY=(int)(h*0.708f);
-                  int leftPlay=(int)(w*0.057f);
+                  int leftPlay=(int)(w*0.072f);
                   int leftExit=(int)(w*0.545f);
                   FrameLayout.LayoutParams lpPlay=new FrameLayout.LayoutParams(pw, ph);
                   lpPlay.leftMargin=leftPlay;
@@ -205,8 +205,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 33
-                  versionName "V16-FIX-CENTER-REAL"
+                  versionCode 34
+                  versionName "V17-PLAY-KANAN-DIKIT"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -224,7 +224,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V16" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V17" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -243,5 +243,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V16-FIX-CENTER-REAL
+          name: jajan-crush-V17-PLAY-KANAN-DIKIT
           path: app/build/outputs/apk/debug/app-debug.apk
