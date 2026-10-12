@@ -33,18 +33,14 @@ jobs:
           import android.widget.*;
           import android.view.*;
           import android.graphics.Color;
-          import android.view.animation.ScaleAnimation;
-          import android.view.animation.Animation;
           public class SplashActivity extends Activity{
-            void addTouchEffect(View v){
+            void addEffect(View v){
               v.setOnTouchListener((view, ev)->{
                 if(ev.getAction()==MotionEvent.ACTION_DOWN){
                   view.animate().scaleX(0.88f).scaleY(0.88f).setDuration(100).start();
                   view.setAlpha(0.7f);
                 } else if(ev.getAction()==MotionEvent.ACTION_UP || ev.getAction()==MotionEvent.ACTION_CANCEL){
-                  view.animate().scaleX(1.15f).scaleY(1.15f).setDuration(80).withEndAction(()->{
-                    view.animate().scaleX(1f).scaleY(1f).setDuration(80).start();
-                  }).start();
+                  view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
                   view.setAlpha(1f);
                 }
                 return false;
@@ -57,34 +53,30 @@ jobs:
               try{ int id=getResources().getIdentifier("splash_bg","drawable",getPackageName()); if(id!=0) bg.setImageResource(id);}catch(Exception e){}
               bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
               root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
-
               LinearLayout row=new LinearLayout(this);
               row.setOrientation(LinearLayout.HORIZONTAL);
               row.setGravity(Gravity.CENTER);
               FrameLayout.LayoutParams flp=new FrameLayout.LayoutParams(-1,-2);
               flp.gravity=Gravity.BOTTOM|Gravity.CENTER;
-              flp.bottomMargin=320;
+              flp.bottomMargin=330;
               row.setLayoutParams(flp);
-
               Button play=new Button(this);
               play.setText("PLAY"); play.setTextColor(Color.parseColor("#FFD700"));
-              play.setTextSize(18); play.setAllCaps(false);
-              play.setShadowLayer(10,0,0,Color.parseColor("#FFA000"));
+              play.setTextSize(17); play.setAllCaps(false);
+              play.setShadowLayer(12,0,0,Color.parseColor("#FF8F00"));
               play.setBackgroundColor(Color.TRANSPARENT);
-              play.setLayoutParams(new LinearLayout.LayoutParams(380,120));
-              addTouchEffect(play);
+              play.setLayoutParams(new LinearLayout.LayoutParams(360,130));
+              addEffect(play);
               play.setOnClickListener(v->{ startActivity(new Intent(SplashActivity.this, MainActivity.class)); finish(); });
-
               Button exit=new Button(this);
               exit.setText("EXIT"); exit.setTextColor(Color.parseColor("#FFD700"));
-              exit.setTextSize(18); exit.setAllCaps(false);
-              exit.setShadowLayer(10,0,0,Color.parseColor("#FFA000"));
+              exit.setTextSize(17); exit.setAllCaps(false);
+              exit.setShadowLayer(12,0,0,Color.parseColor("#FF8F00"));
               exit.setBackgroundColor(Color.TRANSPARENT);
-              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(380,120);
-              lp2.leftMargin=40; exit.setLayoutParams(lp2);
-              addTouchEffect(exit);
+              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(360,130);
+              lp2.leftMargin=30; exit.setLayoutParams(lp2);
+              addEffect(exit);
               exit.setOnClickListener(v-> finishAffinity());
-
               row.addView(play); row.addView(exit);
               root.addView(row);
               setContentView(root);
@@ -92,7 +84,6 @@ jobs:
           }
           SPLASH
 
-          # [MainActivity, gradle, manifest tetep sama kayak V6 yang kemarin ya lur]
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVAEOF'
           package com.rians.jajancrush;
           import android.app.Activity;
@@ -167,7 +158,7 @@ jobs:
                     canvas.drawRoundRect(rf,5,5,woodPlank);
                     canvas.drawRoundRect(rf,5,5,woodBorder);
                     if(!isGameOver && r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),7,7,selGold);
-                    if(!isGameOver && jackpotReady && r==jackpotR && c==jackpotC){ }
+                    if(!isGameOver && jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(110+(jackpotAnim%145)); jackpotAnim+=9; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),7,7,jack); }
                     if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanBmp[grid[r][cc]]!=null){
                       canvas.drawBitmap(jajanBmp[grid[r][cc]], null, new RectF(x+3,y+3,x+cellW-3,y+cellH-3), null);
                     }
@@ -195,8 +186,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 24
-                  versionName "V7-TouchEffect"
+                  versionCode 25
+                  versionName "V7-FIX"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -233,5 +224,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V7-Touch-Effect
+          name: jajan-crush-V7-FIX
           path: app/build/outputs/apk/debug/app-debug.apk
