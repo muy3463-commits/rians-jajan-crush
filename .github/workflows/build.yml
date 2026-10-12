@@ -1,4 +1,4 @@
-name: Build V7 V5 Exact Infinite
+name: Build V9 Clone V5 Infinite
 
 on: [push]
 
@@ -12,7 +12,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build V7 V5 Exact
+      - name: Build V9 Clone V5
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
@@ -38,7 +38,7 @@ jobs:
           ROOT
           cat > app/build.gradle << 'APP'
           plugins { id 'com.android.application' }
-          android { namespace 'com.rians.jajancrush'; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 70; versionName "V7-V5-Infinite" } }
+          android { namespace 'com.rians.jajancrush'; compileSdk 34; defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 90; versionName "V9-CloneV5" } }
           APP
           cat > app/src/main/AndroidManifest.xml << 'MAN'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -56,9 +56,9 @@ jobs:
 
           public class MainActivity extends Activity {
               int level=1, score=0, target=500, moves=18, rows=6, cols=5;
-              int[][] board; ImageView[][] grid; int[] jajans; Random rand=new Random();
-              TextView tvLevel, tvScore, tvMoves; LinearLayout boardLayout;
-              MediaPlayer bgMusic, jackpotSound;
+              int[][] board; ImageView[][] icons; int[] jajans; Random rand=new Random();
+              TextView tvLevelVal, tvScoreVal, tvMovesVal; LinearLayout boardLayout;
+              MediaPlayer bgMusic, jackpotSound; int selR=-1, selC=-1;
 
               @Override
               protected void onCreate(Bundle b){
@@ -66,54 +66,56 @@ jobs:
                   jajans=new int[]{R.drawable.jajan01,R.drawable.jajan02,R.drawable.jajan03,R.drawable.jajan04,R.drawable.jajan05,R.drawable.jajan06};
 
                   FrameLayout root=new FrameLayout(this);
-                  ImageView bg=new ImageView(this); bg.setImageResource(R.drawable.bg_desa); bg.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                  // BACKGROUND FULL - BORDER BATIK KELIATAN SEMUA - PAKE FIT_XY BIAR GAK KE-CROP!
+                  ImageView bg=new ImageView(this); bg.setImageResource(R.drawable.bg_desa); bg.setScaleType(ImageView.ScaleType.FIT_XY);
                   root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
 
-                  // TOP UI PERSIS V5 - KECIL DI ATAS - GAK NUTUPIN MUKA
+                  // TOP UI - PERSIS V5 - KOTAK KECIL DI POJOK
                   RelativeLayout top=new RelativeLayout(this);
-                  top.setLayoutParams(new FrameLayout.LayoutParams(-1, dp(200)));
+                  top.setLayoutParams(new FrameLayout.LayoutParams(-1, dp(170)));
 
-                  LinearLayout boxLevel = createBox("LEVEL", String.valueOf(level));
-                  LinearLayout boxScore = createBox("SCORE", score+"/"+target);
-                  LinearLayout boxMoves = createBox("MOVES", String.valueOf(moves));
-                  tvLevel = (TextView) boxLevel.getChildAt(1);
-                  tvScore = (TextView) boxScore.getChildAt(1);
-                  tvMoves = (TextView) boxMoves.getChildAt(1);
+                  // BUAT KOTAK
+                  LinearLayout boxLevel = makeBox("LEVEL", "1");
+                  LinearLayout boxScore = makeBox("SCORE", "0/500");
+                  LinearLayout boxMoves = makeBox("MOVES", "18");
+                  tvLevelVal = (TextView)boxLevel.getChildAt(1);
+                  tvScoreVal = (TextView)boxScore.getChildAt(1);
+                  tvMovesVal = (TextView)boxMoves.getChildAt(1);
 
-                  RelativeLayout.LayoutParams pLevel = new RelativeLayout.LayoutParams(dp(145), dp(64));
-                  pLevel.setMargins(dp(14), dp(16), 0, 0);
-                  RelativeLayout.LayoutParams pScore = new RelativeLayout.LayoutParams(dp(145), dp(64));
+                  RelativeLayout.LayoutParams pLevel = new RelativeLayout.LayoutParams(dp(132), dp(56));
+                  pLevel.setMargins(dp(10), dp(10), 0, 0);
+                  RelativeLayout.LayoutParams pScore = new RelativeLayout.LayoutParams(dp(132), dp(56));
                   pScore.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                  pScore.setMargins(0, dp(16), dp(14), 0);
-                  RelativeLayout.LayoutParams pMoves = new RelativeLayout.LayoutParams(dp(145), dp(64));
-                  pMoves.setMargins(dp(14), dp(94), 0, 0);
-                  RelativeLayout.LayoutParams pMusic = new RelativeLayout.LayoutParams(dp(64), dp(64));
+                  pScore.setMargins(0, dp(10), dp(10), 0);
+                  RelativeLayout.LayoutParams pMoves = new RelativeLayout.LayoutParams(dp(132), dp(56));
+                  pMoves.setMargins(dp(10), dp(76), 0, 0);
+                  RelativeLayout.LayoutParams pMusic = new RelativeLayout.LayoutParams(dp(56), dp(56));
                   pMusic.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-                  pMusic.setMargins(0, dp(94), dp(32), 0);
+                  pMusic.setMargins(0, dp(76), dp(24), 0);
 
-                  TextView btnMusic = createMusicBtn();
-                  top.addView(boxLevel, pLevel); top.addView(boxScore, pScore);
-                  top.addView(boxMoves, pMoves); top.addView(btnMusic, pMusic);
+                  TextView btnMusic = makeMusicCircle();
+
+                  top.addView(boxLevel, pLevel);
+                  top.addView(boxScore, pScore);
+                  top.addView(boxMoves, pMoves);
+                  top.addView(btnMusic, pMusic);
                   root.addView(top);
 
-                  // BOARD PERSIS V5 - DI BAWAH PAPAN NAMA
+                  // BOARD - DI BAWAH PAPAN NAMA - PERSIS V5
                   LinearLayout container = new LinearLayout(this);
                   container.setOrientation(LinearLayout.VERTICAL);
                   container.setGravity(Gravity.CENTER_HORIZONTAL);
-                  FrameLayout.LayoutParams contLp = new FrameLayout.LayoutParams(-1,-1);
-                  contLp.topMargin = dp(325);
-                  container.setLayoutParams(contLp);
-                  container.setPadding(dp(10), 0, dp(10), dp(14));
+                  FrameLayout.LayoutParams clp = new FrameLayout.LayoutParams(-1,-1);
+                  clp.topMargin = dp(298);
+                  container.setLayoutParams(clp);
+                  container.setPadding(dp(10),0,dp(10),dp(10));
 
                   boardLayout = new LinearLayout(this);
                   boardLayout.setOrientation(LinearLayout.VERTICAL);
-                  GradientDrawable boardBg = new GradientDrawable();
-                  boardBg.setColor(Color.parseColor("#6B5B53"));
-                  boardBg.setCornerRadius(dp(4));
-                  boardLayout.setBackground(boardBg);
-
-                  container.addView(boardLayout, new LinearLayout.LayoutParams(-1,-2));
+                  boardLayout.setBackgroundColor(Color.parseColor("#6B5B53"));
+                  container.addView(boardLayout);
                   root.addView(container);
+
                   setContentView(root);
 
                   try{ bgMusic=MediaPlayer.create(this,R.raw.music); bgMusic.setLooping(true); bgMusic.setVolume(0.4f,0.4f); bgMusic.start(); }catch(Exception e){}
@@ -123,104 +125,71 @@ jobs:
                   initBoard(); drawBoard();
               }
 
-              LinearLayout createBox(String title, String value){
+              LinearLayout makeBox(String title, String value){
                   GradientDrawable gd = new GradientDrawable();
-                  gd.setColor(Color.parseColor("#3B2F2A"));
+                  gd.setColor(Color.parseColor("#3E2723"));
                   gd.setCornerRadius(dp(6));
-                  gd.setStroke(2, Color.parseColor("#D4AF37"));
+                  gd.setStroke(2, Color.parseColor("#FFD700"));
                   LinearLayout ll = new LinearLayout(this);
                   ll.setOrientation(LinearLayout.VERTICAL);
                   ll.setGravity(Gravity.CENTER);
                   ll.setBackground(gd);
-                  TextView tTitle = new TextView(this);
-                  tTitle.setText(title); tTitle.setTextColor(Color.parseColor("#FFC107"));
-                  tTitle.setTextSize(11); tTitle.setGravity(Gravity.CENTER); tTitle.setTypeface(null, Typeface.BOLD);
-                  TextView tVal = new TextView(this);
-                  tVal.setText(value); tVal.setTextColor(Color.WHITE);
-                  tVal.setTextSize(20); tVal.setGravity(Gravity.CENTER); tVal.setTypeface(null, Typeface.BOLD);
-                  ll.addView(tTitle); ll.addView(tVal);
+                  TextView t1 = new TextView(this); t1.setText(title); t1.setTextColor(Color.parseColor("#FFC107")); t1.setTextSize(10); t1.setGravity(Gravity.CENTER); t1.setTypeface(null, Typeface.BOLD);
+                  TextView t2 = new TextView(this); t2.setText(value); t2.setTextColor(Color.WHITE); t2.setTextSize(18); t2.setGravity(Gravity.CENTER); t2.setTypeface(null, Typeface.BOLD);
+                  ll.addView(t1); ll.addView(t2);
                   return ll;
               }
 
-              TextView createMusicBtn(){
-                  GradientDrawable gd = new GradientDrawable();
-                  gd.setShape(GradientDrawable.OVAL);
-                  gd.setColor(Color.parseColor("#3B2F2A"));
-                  gd.setStroke(2, Color.parseColor("#D4AF37"));
-                  TextView tv = new TextView(this);
-                  tv.setText("♪"); tv.setTextSize(20); tv.setTextColor(Color.parseColor("#FFC107"));
-                  tv.setGravity(Gravity.CENTER); tv.setBackground(gd);
-                  return tv;
+              TextView makeMusicCircle(){
+                  GradientDrawable gd = new GradientDrawable(); gd.setShape(GradientDrawable.OVAL); gd.setColor(Color.parseColor("#3E2723")); gd.setStroke(2, Color.parseColor("#FFD700"));
+                  TextView tv = new TextView(this); tv.setText("♪"); tv.setTextSize(20); tv.setTextColor(Color.parseColor("#FFD700")); tv.setGravity(Gravity.CENTER); tv.setBackground(gd); return tv;
               }
 
-              int dp(int d){ return (int)(d * getResources().getDisplayMetrics().density); }
+              int dp(int d){ return (int)(d*getResources().getDisplayMetrics().density); }
               void initBoard(){ board=new int[rows][cols]; for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) board[r][c]=rand.nextInt(6); }
+
               void drawBoard(){
-                  boardLayout.removeAllViews(); grid=new ImageView[rows][cols];
+                  boardLayout.removeAllViews(); icons=new ImageView[rows][cols];
                   int size = (getResources().getDisplayMetrics().widthPixels - dp(22)) / 5;
                   for(int r=0;r<rows;r++){
                       LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
                       for(int c=0;c<cols;c++){
                           final int rr=r, cc=c;
                           FrameLayout cell = new FrameLayout(this);
-                          GradientDrawable cellBg = new GradientDrawable();
-                          cellBg.setColor(Color.parseColor("#7A6A62"));
-                          cellBg.setStroke(1, Color.parseColor("#4E342E"));
-                          cell.setBackground(cellBg);
-                          ImageView iv = new ImageView(this);
-                          iv.setImageResource(jajans[board[r][c]]);
-                          iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                          iv.setPadding(dp(8),dp(8),dp(8),dp(8));
+                          GradientDrawable cellBg = new GradientDrawable(); cellBg.setColor(Color.parseColor("#7A6A62")); cellBg.setStroke(1, Color.parseColor("#5D4037")); cell.setBackground(cellBg);
+                          ImageView iv = new ImageView(this); iv.setImageResource(jajans[board[r][c]]); iv.setScaleType(ImageView.ScaleType.FIT_CENTER); iv.setPadding(dp(8),dp(8),dp(8),dp(8));
+                          if(selR==r && selC==c) iv.setAlpha(0.5f);
                           cell.addView(iv, new FrameLayout.LayoutParams(-1,-1));
-                          View.OnClickListener click = v->onClick(rr,cc);
-                          cell.setOnClickListener(click);
-                          iv.setOnClickListener(click);
-                          row.addView(cell, new LinearLayout.LayoutParams(size, size));
-                          grid[r][c]=iv;
+                          View.OnClickListener cl = v -> {
+                              if(selR==-1){ selR=rr; selC=cc; drawBoard(); }
+                              else{
+                                  if(selR==rr && selC==cc){ selR=-1; selC=-1; drawBoard(); return; }
+                                  if(Math.abs(selR-rr)+Math.abs(selC-cc)==1){
+                                      int tmp=board[selR][selC]; board[selR][selC]=board[rr][cc]; board[rr][cc]=tmp;
+                                      moves--; score+=100;
+                                      if(score>=target){
+                                          level++; target+=250; score=0; moves=18;
+                                          try{ if(jackpotSound!=null){ jackpotSound.seekTo(0); jackpotSound.start(); } }catch(Exception e){}
+                                          Toast.makeText(this,"🎰 JACKPOT LEVEL "+level+" ♾️",Toast.LENGTH_SHORT).show();
+                                      }
+                                      if(moves<=0){ Toast.makeText(this,"Game Over Level "+level,Toast.LENGTH_SHORT).show(); score=0; moves=18; }
+                                      selR=-1; selC=-1; drawBoard();
+                                  } else { selR=rr; selC=cc; drawBoard(); }
+                              }
+                          };
+                          cell.setOnClickListener(cl); iv.setOnClickListener(cl);
+                          row.addView(cell, new LinearLayout.LayoutParams(size,size));
+                          icons[r][c]=iv;
                       }
                       boardLayout.addView(row);
                   }
-                  updateUI();
+                  tvLevelVal.setText(String.valueOf(level));
+                  tvScoreVal.setText(score+"/"+target);
+                  tvMovesVal.setText(String.valueOf(moves));
               }
 
-              int selR=-1, selC=-1;
-              void onClick(int r,int c){
-                  if(selR==-1){ selR=r; selC=c; grid[r][c].setAlpha(0.5f); }
-                  else {
-                      if(selR==r && selC==c){ grid[selR][selC].setAlpha(1f); selR=-1; selC=-1; return; }
-                      if(Math.abs(selR-r)+Math.abs(selC-c)==1){
-                          int tmp=board[selR][selC]; board[selR][selC]=board[r][c]; board[r][c]=tmp;
-                          moves--; score+=50;
-                          boolean win = checkWin();
-                          if(!win) drawBoard(); else { initBoard(); drawBoard(); }
-                      } else {
-                          grid[selR][selC].setAlpha(1f);
-                          selR=r; selC=c; grid[r][c].setAlpha(0.5f); return;
-                      }
-                      if(selR>=0 && grid[selR][selC]!=null) grid[selR][selC].setAlpha(1f);
-                      selR=-1; selC=-1;
-                  }
-              }
-
-              boolean checkWin(){
-                  if(score>=target){
-                      level++; target+=250; score=0; moves=18;
-                      try{ if(jackpotSound!=null){ jackpotSound.seekTo(0); jackpotSound.start(); } }catch(Exception e){}
-                      Toast.makeText(this,"🎰 JACKPOT! LEVEL "+level+" ♾️",Toast.LENGTH_LONG).show();
-                      return true;
-                  }
-                  if(moves<=0){ Toast.makeText(this,"Game Over! Ulang Level "+level,Toast.LENGTH_SHORT).show(); score=0; moves=18; return true; }
-                  return false;
-              }
-
-              void updateUI(){
-                  if(tvLevel!=null) tvLevel.setText(String.valueOf(level));
-                  if(tvScore!=null) tvScore.setText(score+"/"+target);
-                  if(tvMoves!=null) tvMoves.setText(String.valueOf(moves));
-              }
               protected void onPause(){ super.onPause(); if(bgMusic!=null) bgMusic.pause(); }
               protected void onResume(){ super.onResume(); if(bgMusic!=null) bgMusic.start(); }
-              protected void onDestroy(){ super.onDestroy(); if(bgMusic!=null) bgMusic.release(); if(jackpotSound!=null) jackpotSound.release(); }
           }
           JAVA
 
@@ -231,5 +200,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: JajanCrush-V7-V5-Exact-Infinite
+          name: JajanCrush-V9-Clone-V5-Infinite
           path: app/build/outputs/apk/debug/app-debug.apk
