@@ -1,4 +1,4 @@
-name: Build Rians Jajan Crush V20 Infinite
+name: Build Rians Jajan Crush V20
 on: [push]
 
 jobs:
@@ -13,19 +13,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Build APK V20 Infinite + Pity Jackpot
         run: |
           mkdir -p app/src/main/java/com/rians/jajancrush
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/values
 
-          # Copy semua PNG dari root ke drawable (lowercase)
+          # Copy & rename lowercase
           for f in *.png *.jpg *.jpeg; do
             [ -e "$f" ] || continue
             nf=$(echo "$f" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_')
             cp "$f" "app/src/main/res/drawable/$nf" 2>/dev/null || true
           done
-          ls -l app/src/main/res/drawable/
+          echo "=== ASSETS ==="
+          ls -lh app/src/main/res/drawable/ | tail -n 20
 
           # Manifest
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
@@ -41,11 +45,13 @@ jobs:
 
           echo '<resources><string name="app_name">Jajan Crush V20</string></resources>' > app/src/main/res/values/strings.xml
           echo "android.useAndroidX=true" > gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2g" >> gradle.properties
           echo "include ':app'" > settings.gradle
 
           cat > app/build.gradle << 'GRADLE'
           plugins { id 'com.android.application' }
           android {
+            namespace 'com.rians.jajancrush'
             compileSdk 34
             defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 20; versionName "20.0" }
             buildTypes { release { minifyEnabled false } }
@@ -54,10 +60,28 @@ jobs:
           GRADLE
 
           cat > build.gradle << 'GRADLE2'
-          plugins { id 'com.android.application' version '8.1.0' apply false }
+          plugins { id 'com.android.application' version '8.1.4' apply false }
+          task clean(type: Delete){ delete rootProject.buildDir }
           GRADLE2
 
-          # ===== MAIN GAME CODE FULL INFINITE LEVEL =====
+          cat > settings.gradle << 'SET'
+          pluginManagement {
+            repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories { google(); mavenCentral() }
+          }
+          include ':app'
+          SET
+
+          # ===== INI YANG KEMARIN HILANG LUR - BIKIN GRADLEW =====
+          echo ">>> Generating gradle wrapper..."
+          gradle wrapper --gradle-version 8.4
+          chmod +x./gradlew
+          ls -lh./gradlew
+
+          # ===== MAIN GAME CODE FULL 240 BARIS =====
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
           import android.app.Activity;
@@ -120,7 +144,7 @@ jobs:
                 boolean[][] del=new boolean[ROWS][COLS]; boolean found=false;
                 for(int r=0;r<ROWS;r++) for(int c=0;c<COLS-2;c++) if(grid[r][c]>=0 && grid[r][c]==grid[r][c+1] && grid[r][c]==grid[r][c+2]){ del[r][c]=del[r][c+1]=del[r][c+2]=true; found=true; }
                 for(int c=0;c<COLS;c++) for(int r=0;r<ROWS-2;r++) if(grid[r][c]>=0 && grid[r][c]==grid[r+1][c] && grid[r][c]==grid[r+2][c]){ del[r][c]=del[r+1][c]=del[r+2][c]=true; found=true; }
-                if(showJackpot && jackpotR>=0 && del[jackpotR][jackpotC]){ score+=250+(level*10); moves+=2; showJackpot=false; showHappy=true; happyTimer=90; movesTanpaJackpot=0; }
+                if(showJackpot && jackpotR>=0 && jackpotR<ROWS && jackpotC>=0 && del[jackpotR][jackpotC]){ score+=250+(level*10); moves+=2; showJackpot=false; showHappy=true; happyTimer=90; movesTanpaJackpot=0; }
                 if(found){
                   for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++) if(del[r][c]){ grid[r][c]=-1; score+=50+(comboCount*20); }
                   for(int c=0;c<COLS;c++){ int wr=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][c]>=0) grid[wr--][c]=grid[r][c]; for(int r=wr;r>=0;r--) grid[r][c]=rnd.nextInt(5+(level/5)); }
@@ -144,7 +168,6 @@ jobs:
                 for(int r=0;r<ROWS;r++) for(int c=0;c<COLS;c++){
                   int x=gridX+c*cellW, y=gridY+r*cellH;
                   if(grid[r][c]>=0 && grid[r][c]<jajanBmp.length && jajanBmp[grid[r][c]]!=null) canvas.drawBitmap(Bitmap.createScaledBitmap(jajanBmp[grid[r][c]],cellW-10,cellH-10,false),x+5,y+5,null);
-                  else { Paint pp=new Paint(); pp.setColor(Color.argb(80,255,255,255)); canvas.drawRect(x+2,y+2,x+cellW-2,y+cellH-2,pp); }
                   if(r==selR && c==selC){ Paint p=new Paint(); p.setColor(Color.YELLOW); p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(6); canvas.drawRect(x,y,x+cellW,y+cellH,p); }
                   if(showJackpot && r==jackpotR && c==jackpotC){ Paint jp=new Paint(); jp.setColor(Color.argb(170,255,215,0)); canvas.drawCircle(x+cellW/2,y+cellH/2,cellW/2-2,jp); Paint tp=new Paint(); tp.setColor(Color.RED); tp.setTextSize(18); tp.setTypeface(Typeface.DEFAULT_BOLD); tp.setTextAlign(Paint.Align.CENTER); canvas.drawText("JACKPOT",x+cellW/2,y+cellH/2+6,tp); }
                 }
@@ -166,6 +189,7 @@ jobs:
           }
           JAVA
 
+          echo "=== BUILD START ==="
           ./gradlew assembleDebug --stacktrace
           cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V20-Infinite.apk
           ls -lh *.apk
