@@ -32,15 +32,15 @@ jobs:
           import android.os.Bundle;
           import android.widget.*;
           import android.view.*;
-          import android.graphics.Color;
+          import android.graphics.*;
           public class SplashActivity extends Activity{
             void addEffect(View v){
               v.setOnTouchListener((view, ev)->{
                 if(ev.getAction()==MotionEvent.ACTION_DOWN){
                   view.animate().scaleX(0.88f).scaleY(0.88f).setDuration(100).start();
-                  view.setAlpha(0.7f);
+                  view.setAlpha(0.6f);
                 } else if(ev.getAction()==MotionEvent.ACTION_UP || ev.getAction()==MotionEvent.ACTION_CANCEL){
-                  view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                  view.animate().scaleX(1f).scaleY(1f).setDuration(150).start();
                   view.setAlpha(1f);
                 }
                 return false;
@@ -58,23 +58,32 @@ jobs:
               row.setGravity(Gravity.CENTER);
               FrameLayout.LayoutParams flp=new FrameLayout.LayoutParams(-1,-2);
               flp.gravity=Gravity.BOTTOM|Gravity.CENTER;
-              flp.bottomMargin=330;
+              flp.bottomMargin=580;
               row.setLayoutParams(flp);
+              Typeface tf = Typeface.create("serif", Typeface.BOLD);
               Button play=new Button(this);
-              play.setText("PLAY"); play.setTextColor(Color.parseColor("#FFD700"));
-              play.setTextSize(17); play.setAllCaps(false);
-              play.setShadowLayer(12,0,0,Color.parseColor("#FF8F00"));
+              play.setText("PLAY");
+              play.setTypeface(tf);
+              play.setTextColor(Color.parseColor("#FFEFAF"));
+              play.setTextSize(24);
+              play.setFakeBoldText(true);
+              play.setAllCaps(false);
+              play.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               play.setBackgroundColor(Color.TRANSPARENT);
-              play.setLayoutParams(new LinearLayout.LayoutParams(360,130));
+              play.setLayoutParams(new LinearLayout.LayoutParams(400,180));
               addEffect(play);
               play.setOnClickListener(v->{ startActivity(new Intent(SplashActivity.this, MainActivity.class)); finish(); });
               Button exit=new Button(this);
-              exit.setText("EXIT"); exit.setTextColor(Color.parseColor("#FFD700"));
-              exit.setTextSize(17); exit.setAllCaps(false);
-              exit.setShadowLayer(12,0,0,Color.parseColor("#FF8F00"));
+              exit.setText("EXIT");
+              exit.setTypeface(tf);
+              exit.setTextColor(Color.parseColor("#FFEFAF"));
+              exit.setTextSize(24);
+              exit.setFakeBoldText(true);
+              exit.setAllCaps(false);
+              exit.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
               exit.setBackgroundColor(Color.TRANSPARENT);
-              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(360,130);
-              lp2.leftMargin=30; exit.setLayoutParams(lp2);
+              LinearLayout.LayoutParams lp2=new LinearLayout.LayoutParams(400,180);
+              lp2.leftMargin=50; exit.setLayoutParams(lp2);
               addEffect(exit);
               exit.setOnClickListener(v-> finishAffinity());
               row.addView(play); row.addView(exit);
@@ -186,8 +195,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 25
-                  versionName "V7-FIX"
+                  versionCode 26
+                  versionName "V9-GOLD-PAS"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -205,7 +214,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V7" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V9" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -224,5 +233,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V7-FIX
+          name: jajan-crush-V9-GOLD-PAS
           path: app/build/outputs/apk/debug/app-debug.apk
