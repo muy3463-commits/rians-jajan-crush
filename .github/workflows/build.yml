@@ -13,8 +13,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.4 (FIX 9.8 BUG)
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
 
       - name: Build APK V20 Infinite + Pity Jackpot
         run: |
@@ -22,16 +24,13 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/values
 
-          # Copy & rename lowercase
           for f in *.png *.jpg *.jpeg; do
             [ -e "$f" ] || continue
             nf=$(echo "$f" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_')
             cp "$f" "app/src/main/res/drawable/$nf" 2>/dev/null || true
           done
-          echo "=== ASSETS ==="
-          ls -lh app/src/main/res/drawable/ | tail -n 20
+          ls app/src/main/res/drawable/
 
-          # Manifest
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.rians.jajancrush">
@@ -45,29 +44,26 @@ jobs:
 
           echo '<resources><string name="app_name">Jajan Crush V20</string></resources>' > app/src/main/res/values/strings.xml
           echo "android.useAndroidX=true" > gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2g" >> gradle.properties
-          echo "include ':app'" > settings.gradle
+          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "android.nonTransitiveRClass=true" >> gradle.properties
 
           cat > app/build.gradle << 'GRADLE'
           plugins { id 'com.android.application' }
           android {
             namespace 'com.rians.jajancrush'
             compileSdk 34
-            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 20; versionName "20.0" }
+            defaultConfig { applicationId "com.rians.jajancrush"; minSdk 21; targetSdk 34; versionCode 21; versionName "21.0" }
             buildTypes { release { minifyEnabled false } }
           }
           dependencies {}
           GRADLE
 
           cat > build.gradle << 'GRADLE2'
-          plugins { id 'com.android.application' version '8.1.4' apply false }
-          task clean(type: Delete){ delete rootProject.buildDir }
+          plugins { id 'com.android.application' version '8.1.0' apply false }
           GRADLE2
 
           cat > settings.gradle << 'SET'
-          pluginManagement {
-            repositories { google(); mavenCentral(); gradlePluginPortal() }
-          }
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
           dependencyResolutionManagement {
             repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
             repositories { google(); mavenCentral() }
@@ -75,13 +71,10 @@ jobs:
           include ':app'
           SET
 
-          # ===== INI YANG KEMARIN HILANG LUR - BIKIN GRADLEW =====
-          echo ">>> Generating gradle wrapper..."
-          gradle wrapper --gradle-version 8.4
+          echo ">>> Generating wrapper 8.4"
+          gradle wrapper --gradle-version 8.4 --distribution-type all
           chmod +x./gradlew
-          ls -lh./gradlew
 
-          # ===== MAIN GAME CODE FULL 240 BARIS =====
           cat > app/src/main/java/com/rians/jajancrush/MainActivity.java << 'JAVA'
           package com.rians.jajancrush;
           import android.app.Activity;
@@ -189,14 +182,12 @@ jobs:
           }
           JAVA
 
-          echo "=== BUILD START ==="
           ./gradlew assembleDebug --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V20-Infinite.apk
-          ls -lh *.apk
+          cp app/build/outputs/apk/debug/app-debug.apk Rians-Jajan-Crush-V20-Final.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rians-Jajan-Crush-V20-Infinite
+          name: Rians-Jajan-Crush-V20-Final
           path: "*.apk"
           retention-days: 7
