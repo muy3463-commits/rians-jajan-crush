@@ -23,6 +23,10 @@ jobs:
           cp jajan06.png app/src/main/res/drawable/ 2>/dev/null || true
           if [ -f splash.png ]; then cp splash.png app/src/main/res/drawable/splash_bg.png; fi
           if [ -f music.mp3 ]; then cp music.mp3 app/src/main/res/raw/music.mp3; fi
+          # === 3 SUARA BARU LU ===
+          if [ -f crunch.mp3 ]; then cp crunch.mp3 app/src/main/res/raw/crunch.mp3; fi
+          if [ -f nice.mp3 ]; then cp nice.mp3 app/src/main/res/raw/nice.mp3; fi
+          if [ -f fantastic.mp3 ]; then cp fantastic.mp3 app/src/main/res/raw/fantastic.mp3; fi
           if [ -f icon.png ]; then cp icon.png app/src/main/res/mipmap-hdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-mdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xhdpi/ic_launcher.png; cp icon.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png; cp icon.png app/src/main/res/drawable/ic_launcher.png; fi
 
           cat > app/src/main/java/com/rians/jajancrush/SplashActivity.java << 'SPLASH'
@@ -115,9 +119,31 @@ jobs:
           import java.util.ArrayList;
           public class MainActivity extends Activity{
             SharedPreferences prefs; MediaPlayer bgMusic; boolean isMuted=false;
-            protected void onCreate(Bundle b){ super.onCreate(b); prefs=getSharedPreferences("jajan",0); isMuted=prefs.getBoolean("mute",false); try{ int mid=getResources().getIdentifier("music","raw",getPackageName()); if(mid!=0){ bgMusic=MediaPlayer.create(this,mid); bgMusic.setLooping(true); if(!isMuted) bgMusic.start(); } }catch(Exception e){} setContentView(new GameView(this)); }
+            MediaPlayer sfxCrunch, sfxNice, sfxFantastic;
+            protected void onCreate(Bundle b){
+              super.onCreate(b);
+              prefs=getSharedPreferences("jajan",0); isMuted=prefs.getBoolean("mute",false);
+              try{ int mid=getResources().getIdentifier("music","raw",getPackageName()); if(mid!=0){ bgMusic=MediaPlayer.create(this,mid); bgMusic.setLooping(true); if(!isMuted) bgMusic.start(); } }catch(Exception e){}
+              try{
+                int cId=getResources().getIdentifier("crunch","raw",getPackageName());
+                int nId=getResources().getIdentifier("nice","raw",getPackageName());
+                int fId=getResources().getIdentifier("fantastic","raw",getPackageName());
+                if(cId!=0) sfxCrunch=MediaPlayer.create(this,cId);
+                if(nId!=0) sfxNice=MediaPlayer.create(this,nId);
+                if(fId!=0) sfxFantastic=MediaPlayer.create(this,fId);
+              }catch(Exception e){}
+              setContentView(new GameView(this));
+            }
             protected void onPause(){ super.onPause(); try{ if(bgMusic!=null) bgMusic.pause(); }catch(Exception e){} }
             protected void onResume(){ super.onResume(); if(!isMuted) try{ if(bgMusic!=null) bgMusic.start(); }catch(Exception e){} }
+            void playSfx(String type){
+              if(isMuted) return;
+              try{
+                if(type.equals("crunch") && sfxCrunch!=null){ sfxCrunch.seekTo(0); sfxCrunch.start(); }
+                if(type.equals("nice") && sfxNice!=null){ sfxNice.seekTo(0); sfxNice.start(); }
+                if(type.equals("fantastic") && sfxFantastic!=null){ sfxFantastic.seekTo(0); sfxFantastic.start(); }
+              }catch(Exception e){}
+            }
             class Particle{ float x,y,vx,vy,r,alpha; int col; float rot,vr; }
             class FloatText{ float x,y,vy,alpha; String txt; int col; float scale; }
             class GameView extends View{
@@ -134,17 +160,82 @@ jobs:
               boolean isGameOver=false; String overReason=""; int overAnim=0;
               int[] jajanColors=new int[]{Color.parseColor("#4CAF50"), Color.parseColor("#FFEB3B"), Color.parseColor("#E0E0E0"), Color.parseColor("#FF5722"), Color.parseColor("#81C784"), Color.parseColor("#E91E63")};
               public GameView(Context c){ super(c); try{ int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName()); if(bgId!=0) bg=BitmapFactory.decodeResource(getResources(),bgId); for(int i=0;i<6;i++){ int id=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName()); if(id!=0) jajanBmp[i]=BitmapFactory.decodeResource(getResources(),id); } }catch(Exception e){} }
-              void saveGame(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.putInt("score",score); ed.putInt("moves",moves); ed.putInt("target",target); ed.putInt("fail",failCount); StringBuilder sb=new StringBuilder(); for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) sb.append(grid[r][cc]).append(","); ed.putString("grid",sb.toString()); ed.apply(); }catch(Exception e){} }
+              void saveGame(){ try{ SharedPreferences.Editor ed=prefs.edit(); ed.putInt("level",level); ed.putInt("score",score); ed.putInt("moves",moves); ed.putInt("target",target); ed.putInt("fail",failCount); ed.putInt("goStreak",prefs.getInt("goStreak",0)); StringBuilder sb=new StringBuilder(); for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) sb.append(grid[r][cc]).append(","); ed.putString("grid",sb.toString()); ed.apply(); }catch(Exception e){} }
               boolean loadGame(){ try{ if(!prefs.contains("grid")) return false; level=prefs.getInt("level",1); score=prefs.getInt("score",0); moves=prefs.getInt("moves",28); target=prefs.getInt("target",500); failCount=prefs.getInt("fail",0); String s=prefs.getString("grid",""); if(s.length()<10) return false; String[] ar=s.split(","); int idx=0; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(idx<ar.length) grid[r][cc]=Integer.parseInt(ar[idx]); idx++; } return true; }catch(Exception e){} return false; }
               void toggleMute(){ isMuted=!isMuted; try{ prefs.edit().putBoolean("mute",isMuted).apply(); }catch(Exception e){} try{ if(isMuted){ if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.pause(); } else { if(((MainActivity)getContext()).bgMusic!=null) ((MainActivity)getContext()).bgMusic.start(); } }catch(Exception e){} }
-              void initGridSameLevel(){ int types=Math.min(5+level/2,6); for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int v; do{ v=(int)(Math.random()*types); grid[r][cc]=v; }while((r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc])||(cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2])); } int tries=0; while(!hasPossibleMoves()&&tries<50){ shuffleGrid(); tries++; } score=0; moves=Math.max(28-(level-1)*2,12); failCount=0; jackpotReady=false; selR=-1; selC=-1; isGameOver=false; saveGame(); }
-              void initGrid(){ target=500+(level-1)*150; initGridSameLevel(); }
+              void initGridSameLevel(){
+                int types=Math.min(5+level/2,6);
+                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ int v; do{ v=(int)(Math.random()*types); grid[r][cc]=v; }while((r>=2 && grid[r][cc]==grid[r-1][cc] && grid[r][cc]==grid[r-2][cc])||(cc>=2 && grid[r][cc]==grid[r][cc-1] && grid[r][cc]==grid[r][cc-2])); }
+                int tries=0; while(!hasPossibleMoves()&&tries<50){ shuffleGrid(); tries++; }
+                score=0;
+                moves=Math.max(28-(level-1)*2,12);
+                failCount=0; jackpotReady=false; selR=-1; selC=-1; isGameOver=false;
+                // === PITY SYSTEM: KALAH 2-3x LANGSUNG JACKPOT ===
+                int goStreak=prefs.getInt("goStreak",0);
+                if(goStreak>=2){
+                  jackpotReady=true; jackpotR=(int)(Math.random()*ROWS); jackpotC=(int)(Math.random()*COLS);
+                }
+                saveGame();
+              }
+              void initGrid(){
+                // LEVEL MAKIN TINGGI MAKIN SUSAH, INFINITE GAK ADA TAMAT
+                target=500+(level-1)*250 + (level*level*5);
+                initGridSameLevel();
+              }
               void shuffleGrid(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) grid[r][cc]=(int)(Math.random()*Math.min(5+level/2,6)); }
               boolean hasMatchAtBoard(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(r<ROWS-2 && grid[r][cc]==grid[r+1][cc] && grid[r][cc]==grid[r+2][cc]) return true; if(cc<COLS-2 && grid[r][cc]==grid[r][cc+1] && grid[r][cc]==grid[r][cc+2]) return true; } return false; }
               boolean hasPossibleMoves(){ for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(cc+1<COLS){ int t=grid[r][cc]; grid[r][cc]=grid[r][cc+1]; grid[r][cc+1]=t; if(hasMatchAtBoard()){ t=grid[r][cc]; grid[r][cc]=grid[r][cc+1]; grid[r][cc+1]=t; return true; } t=grid[r][cc]; grid[r][cc]=grid[r][cc+1]; grid[r][cc+1]=t; } if(r+1<ROWS){ int t=grid[r][cc]; grid[r][cc]=grid[r+1][cc]; grid[r+1][cc]=t; if(hasMatchAtBoard()){ t=grid[r][cc]; grid[r][cc]=grid[r+1][cc]; grid[r+1][cc]=t; return true; } t=grid[r][cc]; grid[r][cc]=grid[r+1][cc]; grid[r+1][cc]=t; } } return false; }
-              void setGameOver(String reason){ isGameOver=true; overReason=reason; overAnim=0; }
+              void setGameOver(String reason){
+                isGameOver=true; overReason=reason; overAnim=0;
+                int gs=prefs.getInt("goStreak",0)+1;
+                prefs.edit().putInt("goStreak",gs).apply();
+              }
               void spawnWah(float x,float y,int type,boolean isJackpot){ int count=isJackpot?50:25; int baseCol=type>=0&&type<6?jajanColors[type]:Color.YELLOW; for(int i=0;i<count;i++){ Particle p=new Particle(); p.x=x; p.y=y; float ang=(float)(Math.random()*Math.PI*2); float spd=(float)(Math.random()*(isJackpot?14:10)+2); p.vx=(float)Math.cos(ang)*spd; p.vy=(float)Math.sin(ang)*spd-(isJackpot?5:2); p.r=(float)(Math.random()*(isJackpot?10:6)+3); p.alpha=255; p.col=baseCol; if(isJackpot && Math.random()>0.5) p.col=Color.YELLOW; p.rot=(float)(Math.random()*360); p.vr=(float)(Math.random()*16-8); parts.add(p); } FloatText ft=new FloatText(); ft.x=x; ft.y=y; ft.vy=isJackpot?-3.5f:-2f; ft.alpha=255; ft.txt=isJackpot?"+500 JACKPOT!":"+20"; ft.col=isJackpot?Color.YELLOW:Color.WHITE; ft.scale=isJackpot?1.6f:1.1f; floatTexts.add(ft); }
-              boolean check(){ boolean[][] del=new boolean[ROWS][COLS]; boolean found=false; for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){ if(r<ROWS-2 && grid[r][cc]==grid[r+1][cc] && grid[r][cc]==grid[r+2][cc]){ del[r][cc]=del[r+1][cc]=del[r+2][cc]=true; found=true; } if(cc<COLS-2 && grid[r][cc]==grid[r][cc+1] && grid[r][cc]==grid[r][cc+2]){ del[r][cc]=del[r][cc+1]=del[r][cc+2]=true; found=true; } } if(found){ boolean gotJack=false; if(jackpotReady && del[jackpotR][jackpotC]){ gotJack=true; score+=500; showJackpot=true; jackpotPopup=0; spawnWah(gridX+jackpotC*cellW+cellW/2, gridY+jackpotR*cellH+cellH/2, grid[jackpotR][jackpotC], true); jackpotReady=false; failCount=0; } for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(del[r][cc]){ if(!(gotJack && r==jackpotR && cc==jackpotC)){ spawnWah(gridX+cc*cellW+cellW/2, gridY+r*cellH+cellH/2, grid[r][cc], false); } score+=20; grid[r][cc]=-1; } for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*Math.min(5+level/2,6)); } if(score>=target){ level++; showLevelUp=true; levelUpTimer=0; score=0; target=500+(level-1)*150; moves=Math.max(28-(level-1)*2,12); } saveGame(); if(moves<=0 && score<target) setGameOver("MOVES HABIS!"); else if(!hasPossibleMoves()) setGameOver("GAK ADA LANGKAH!"); return true; } failCount++; if(failCount>10 &&!jackpotReady){ if(Math.random()>0.35){ jackpotReady=true; jackpotR=(int)(Math.random()*ROWS); jackpotC=(int)(Math.random()*COLS); } } if(moves<=0 && score<target) setGameOver("MOVES HABIS!"); else if(!hasPossibleMoves()) setGameOver("GAK ADA LANGKAH!"); saveGame(); return false; }
+              boolean check(){
+                boolean[][] del=new boolean[ROWS][COLS]; boolean found=false; int delCount=0;
+                for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++){
+                  if(r<ROWS-2 && grid[r][cc]==grid[r+1][cc] && grid[r][cc]==grid[r+2][cc]){ del[r][cc]=del[r+1][cc]=del[r+2][cc]=true; found=true; }
+                  if(cc<COLS-2 && grid[r][cc]==grid[r][cc+1] && grid[r][cc]==grid[r][cc+2]){ del[r][cc]=del[r][cc+1]=del[r][cc+2]=true; found=true; }
+                }
+                if(found){
+                  for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(del[r][cc]) delCount++;
+                  boolean gotJack=false;
+                  if(jackpotReady && del[jackpotR][jackpotC]){
+                    gotJack=true; score+=500; showJackpot=true; jackpotPopup=0;
+                    spawnWah(gridX+jackpotC*cellW+cellW/2, gridY+jackpotR*cellH+cellH/2, grid[jackpotR][jackpotC], true);
+                    ((MainActivity)getContext()).playSfx("fantastic");
+                    jackpotReady=false; failCount=0;
+                    prefs.edit().putInt("goStreak",0).apply();
+                  } else {
+                    // === LOGIKA 3 SUARA LU ===
+                    if(delCount<=3){
+                      ((MainActivity)getContext()).playSfx("crunch");
+                    } else {
+                      ((MainActivity)getContext()).playSfx("nice");
+                    }
+                  }
+                  for(int r=0;r<ROWS;r++) for(int cc=0;cc<COLS;cc++) if(del[r][cc]){ if(!(gotJack && r==jackpotR && cc==jackpotC)){ spawnWah(gridX+cc*cellW+cellW/2, gridY+r*cellH+cellH/2, grid[r][cc], false); } score+=20; grid[r][cc]=-1; }
+                  for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*Math.min(5+level/2,6)); }
+                  if(score>=target){ level++; showLevelUp=true; levelUpTimer=0; score=0; target=500+(level-1)*250+(level*level*5); moves=Math.max(28-(level-1)*2,12); prefs.edit().putInt("goStreak",0).apply(); }
+                  saveGame();
+                  if(moves<=0 && score<target) setGameOver("MOVES HABIS!");
+                  else if(!hasPossibleMoves()) setGameOver("GAK ADA LANGKAH!");
+                  return true;
+                }
+                failCount++;
+                // JACKPOT JADI SERING, GAK PERLU TUNGGU 10x GAGAL
+                if(failCount>3 &&!jackpotReady){
+                  // makin tinggi level makin susah dapet jackpot, tapi kalo streak kalah 2x tetep dipaksa muncul
+                  int gs=prefs.getInt("goStreak",0);
+                  float chance = gs>=2? 1.0f : Math.max(0.15f, 0.6f - level*0.03f);
+                  if(Math.random() < chance){
+                    jackpotReady=true; jackpotR=(int)(Math.random()*ROWS); jackpotC=(int)(Math.random()*COLS);
+                  }
+                }
+                if(moves<=0 && score<target) setGameOver("MOVES HABIS!");
+                else if(!hasPossibleMoves()) setGameOver("GAK ADA LANGKAH!");
+                saveGame(); return false;
+              }
               protected void onDraw(Canvas canvas){
                 try{
                   int w=getWidth(), h=getHeight(); if(w==0||h==0) return;
@@ -205,8 +296,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 34
-                  versionName "V17-PLAY-KANAN-DIKIT"
+                  versionCode 35
+                  versionName "V18-JACKPOT-PITY"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -224,7 +315,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V17" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V18" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -243,5 +334,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V17-PLAY-KANAN-DIKIT
+          name: jajan-crush-V18-JACKPOT-PITY
           path: app/build/outputs/apk/debug/app-debug.apk
