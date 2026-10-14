@@ -243,8 +243,9 @@ jobs:
                 else return 8050 + (lvl-25)*500;
               }
               int calcBaseMoves(int lvl){
-                if(lvl<=30) return Math.max(24 - (lvl-1), 12);
-                else return 12;
+                if(lvl<=10) return 27 - lvl; // L1=26, L8=19, L9=18, L10=17
+                if(lvl<=15) return 16;
+                return 15; // lock 15+ infinite
               }
               void initGridSameLevel(){
                 int types=6;
@@ -344,9 +345,15 @@ jobs:
                   for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*6); }
                   if(score>=target){
                     level++;
-                    showLevelUp=true; levelUpTimer=0; score=0; target=calcTarget(level);
+                    // ===== BONUS NAIK LEVEL +2 DAN LEVEL 11+ TAMBAH +2 LAGI =====
                     int goSt=prefs.getInt("goStreak",0);
-                    moves=calcBaseMoves(level);
+                    int base = calcBaseMoves(level);
+                    int levelBonus = 2;
+                    int extra11 = (level >= 11)? 2 : 0;
+                    int bonusGO = goSt*2;
+                    moves = base + levelBonus + extra11 + bonusGO;
+                    // =========================================
+                    showLevelUp=true; levelUpTimer=0; score=0; target=calcTarget(level);
                     prefs.edit().putInt("goStreak",0).apply(); comboChain=0;
                   }
                   saveGame();
@@ -436,8 +443,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 42
-                  versionName "V24-INFINITE-NAGIH"
+                  versionCode 43
+                  versionName "V25-BONUS-LEVEL"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -455,7 +462,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V24 INFINITE" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V25 BONUS" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -474,5 +481,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V24-INFINITE
+          name: jajan-crush-V25-BONUS-LEVEL
           path: app/build/outputs/apk/debug/app-debug.apk
