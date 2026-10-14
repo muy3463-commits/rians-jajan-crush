@@ -14,26 +14,6 @@ jobs:
       - name: Siapkan Project
         run: |
           mkdir -p app/src/main/res/drawable app/src/main/res/raw app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/java/com/rians/jajancrush
-          pip install Pillow -q
-          python3 - << 'PY'
-          from PIL import Image
-          import glob, os
-          for f in glob.glob("*.png"):
-            try:
-              im = Image.open(f).convert("RGBA")
-              datas = list(im.getdata())
-              nd = []
-              for r,g,b,a in datas:
-                if r>220 and g>220 and b>220:
-                  nd.append((255,255,255,0))
-                else:
-                  nd.append((r,g,b,a))
-              im.putdata(nd)
-              im.save(f, "PNG")
-              print(f"clean {f}")
-            except Exception as e:
-              print(e)
-          PY
           cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
           cp jajan*.png app/src/main/res/drawable/ 2>/dev/null || true
           if [ -f splash.png ]; then cp splash.png app/src/main/res/drawable/splash_bg.png; fi
@@ -175,7 +155,6 @@ jobs:
               int movesUsed=0;
               int comboChain=0;
               int[] jajanColors=new int[]{Color.parseColor("#4CAF50"), Color.parseColor("#FFEB3B"), Color.parseColor("#E0E0E0"), Color.parseColor("#FF5722"), Color.parseColor("#81C784"), Color.parseColor("#E91E63")};
-
               int getBaseOffset(){ return ((level-1)*2) % 12; }
               Bitmap getJajanBmp(int type){
                 int offset=getBaseOffset();
@@ -184,7 +163,6 @@ jobs:
                 if(allJajan[idx]!=null) return allJajan[idx];
                 return allJajan[type%12];
               }
-
               public GameView(Context c){
                 super(c);
                 try{
@@ -426,8 +404,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 44
-                  versionName "V26-ROTATING-JAJAN"
+                  versionCode 46
+                  versionName "V28-FINAL-TRANSPARAN"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -445,7 +423,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V26" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V28" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -464,5 +442,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V26-ROTATING-JAJAN
+          name: jajan-crush-V28-FINAL-TRANSPARAN
           path: app/build/outputs/apk/debug/app-debug.apk
