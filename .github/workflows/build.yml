@@ -14,19 +14,28 @@ jobs:
       - name: Siapkan Project
         run: |
           mkdir -p app/src/main/res/drawable app/src/main/res/raw app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/java/com/rians/jajancrush
+          pip install Pillow -q
+          python3 - << 'PY'
+          from PIL import Image
+          import glob, os
+          for f in glob.glob("*.png"):
+            try:
+              im = Image.open(f).convert("RGBA")
+              datas = list(im.getdata())
+              nd = []
+              for r,g,b,a in datas:
+                if r>220 and g>220 and b>220:
+                  nd.append((255,255,255,0))
+                else:
+                  nd.append((r,g,b,a))
+              im.putdata(nd)
+              im.save(f, "PNG")
+              print(f"clean {f}")
+            except Exception as e:
+              print(e)
+          PY
           cp bg_desa.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan01.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan02.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan03.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan04.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan05.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan06.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan07.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan08.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan09.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan10.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan11.png app/src/main/res/drawable/ 2>/dev/null || true
-          cp jajan12.png app/src/main/res/drawable/ 2>/dev/null || true
+          cp jajan*.png app/src/main/res/drawable/ 2>/dev/null || true
           if [ -f splash.png ]; then cp splash.png app/src/main/res/drawable/splash_bg.png; fi
           if [ -f music.mp3 ]; then cp music.mp3 app/src/main/res/raw/music.mp3; fi
           if [ -f crunch.mp3 ]; then cp crunch.mp3 app/src/main/res/raw/crunch.mp3; fi
@@ -65,48 +74,25 @@ jobs:
               root.addView(bg, new FrameLayout.LayoutParams(-1,-1));
               Typeface tf = Typeface.create("serif", Typeface.BOLD);
               Button play=new Button(this);
-              play.setText("PLAY");
-              play.setTypeface(tf);
-              play.getPaint().setFakeBoldText(true);
-              play.setTextColor(Color.parseColor("#FFEFAF"));
-              play.setTextSize(26);
-              play.setAllCaps(false);
-              play.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
-              play.setBackgroundColor(Color.TRANSPARENT);
-              play.setGravity(Gravity.CENTER);
+              play.setText("PLAY"); play.setTypeface(tf); play.getPaint().setFakeBoldText(true);
+              play.setTextColor(Color.parseColor("#FFEFAF")); play.setTextSize(26); play.setAllCaps(false);
+              play.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723")); play.setBackgroundColor(Color.TRANSPARENT); play.setGravity(Gravity.CENTER);
               addEffect(play);
               play.setOnClickListener(v->{ startActivity(new Intent(SplashActivity.this, MainActivity.class)); finish(); });
               Button exit=new Button(this);
-              exit.setText("EXIT");
-              exit.setTypeface(tf);
-              exit.getPaint().setFakeBoldText(true);
-              exit.setTextColor(Color.parseColor("#FFEFAF"));
-              exit.setTextSize(26);
-              exit.setAllCaps(false);
-              exit.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723"));
-              exit.setBackgroundColor(Color.TRANSPARENT);
-              exit.setGravity(Gravity.CENTER);
+              exit.setText("EXIT"); exit.setTypeface(tf); exit.getPaint().setFakeBoldText(true);
+              exit.setTextColor(Color.parseColor("#FFEFAF")); exit.setTextSize(26); exit.setAllCaps(false);
+              exit.setShadowLayer(12, 4, 4, Color.parseColor("#3E2723")); exit.setBackgroundColor(Color.TRANSPARENT); exit.setGravity(Gravity.CENTER);
               addEffect(exit);
               exit.setOnClickListener(v-> finishAffinity());
-              root.addView(play);
-              root.addView(exit);
+              root.addView(play); root.addView(exit);
               root.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener(){
                 public void onGlobalLayout(){
-                  int w=root.getWidth(), h=root.getHeight();
-                  if(w==0) return;
-                  int pw=(int)(w*0.395f);
-                  int ph=(int)(h*0.072f);
-                  int topY=(int)(h*0.708f);
-                  int leftPlay=(int)(w*0.072f);
-                  int leftExit=(int)(w*0.545f);
-                  FrameLayout.LayoutParams lpPlay=new FrameLayout.LayoutParams(pw, ph);
-                  lpPlay.leftMargin=leftPlay;
-                  lpPlay.topMargin=topY;
-                  play.setLayoutParams(lpPlay);
-                  FrameLayout.LayoutParams lpExit=new FrameLayout.LayoutParams(pw, ph);
-                  lpExit.leftMargin=leftExit;
-                  lpExit.topMargin=topY;
-                  exit.setLayoutParams(lpExit);
+                  int w=root.getWidth(), h=root.getHeight(); if(w==0) return;
+                  int pw=(int)(w*0.395f); int ph=(int)(h*0.072f); int topY=(int)(h*0.708f);
+                  int leftPlay=(int)(w*0.072f); int leftExit=(int)(w*0.545f);
+                  FrameLayout.LayoutParams lpPlay=new FrameLayout.LayoutParams(pw, ph); lpPlay.leftMargin=leftPlay; lpPlay.topMargin=topY; play.setLayoutParams(lpPlay);
+                  FrameLayout.LayoutParams lpExit=new FrameLayout.LayoutParams(pw, ph); lpExit.leftMargin=leftExit; lpExit.topMargin=topY; exit.setLayoutParams(lpExit);
                 }
               });
               setContentView(root);
@@ -135,12 +121,7 @@ jobs:
               isMuted=prefs.getBoolean("mute",false);
               try{
                 int mid=getResources().getIdentifier("music","raw",getPackageName());
-                if(mid!=0){
-                  bgMusic=MediaPlayer.create(this,mid);
-                  bgMusic.setLooping(true);
-                  bgMusic.setVolume(0.45f,0.45f);
-                  if(!isMuted) bgMusic.start();
-                }
+                if(mid!=0){ bgMusic=MediaPlayer.create(this,mid); bgMusic.setLooping(true); bgMusic.setVolume(0.45f,0.45f); if(!isMuted) bgMusic.start(); }
               }catch(Exception e){}
               try{
                 int cId=getResources().getIdentifier("crunch","raw",getPackageName());
@@ -176,7 +157,7 @@ jobs:
               float downX, downY;
               int downR, downC;
               int selR=-1, selC=-1;
-              Bitmap[][] jajanSets=new Bitmap[2][6];
+              Bitmap[] allJajan=new Bitmap[12];
               Bitmap bg;
               ArrayList<Particle> parts=new ArrayList<>();
               ArrayList<FloatText> floatTexts=new ArrayList<>();
@@ -194,18 +175,24 @@ jobs:
               int movesUsed=0;
               int comboChain=0;
               int[] jajanColors=new int[]{Color.parseColor("#4CAF50"), Color.parseColor("#FFEB3B"), Color.parseColor("#E0E0E0"), Color.parseColor("#FF5722"), Color.parseColor("#81C784"), Color.parseColor("#E91E63")};
-              int getJajanSetIndex(){ return (level % 2 == 1)? 0 : 1; }
+
+              int getBaseOffset(){ return ((level-1)*2) % 12; }
+              Bitmap getJajanBmp(int type){
+                int offset=getBaseOffset();
+                int idx=(offset+type)%12;
+                if(idx<0) idx+=12;
+                if(allJajan[idx]!=null) return allJajan[idx];
+                return allJajan[type%12];
+              }
+
               public GameView(Context c){
                 super(c);
                 try{
                   int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName());
                   if(bgId!=0) bg=BitmapFactory.decodeResource(getResources(),bgId);
-                  for(int i=0;i<6;i++){
-                    int id1=getResources().getIdentifier("jajan0"+(i+1),"drawable",getPackageName());
-                    if(id1!=0) jajanSets[0][i]=BitmapFactory.decodeResource(getResources(),id1);
-                    int id2=getResources().getIdentifier("jajan0"+(i+7),"drawable",getPackageName());
-                    if(id2!=0) jajanSets[1][i]=BitmapFactory.decodeResource(getResources(),id2);
-                    else jajanSets[1][i]=jajanSets[0][i];
+                  for(int i=0;i<12;i++){
+                    int id=getResources().getIdentifier("jajan"+String.format("%02d",i+1),"drawable",getPackageName());
+                    if(id!=0) allJajan[i]=BitmapFactory.decodeResource(getResources(),id);
                   }
                 }catch(Exception e){}
               }
@@ -243,9 +230,9 @@ jobs:
                 else return 8050 + (lvl-25)*500;
               }
               int calcBaseMoves(int lvl){
-                if(lvl<=10) return 27 - lvl; // L1=26, L8=19, L9=18, L10=17
+                if(lvl<=10) return 27 - lvl;
                 if(lvl<=15) return 16;
-                return 15; // lock 15+ infinite
+                return 15;
               }
               void initGridSameLevel(){
                 int types=6;
@@ -266,9 +253,7 @@ jobs:
                   jackpotReady=true;
                   jackpotR=(int)(Math.random()*ROWS);
                   jackpotC=(int)(Math.random()*COLS);
-                } else {
-                  jackpotReady=false;
-                }
+                } else { jackpotReady=false; }
                 saveGame();
                 postDelayed(new Runnable(){ public void run(){ if(hasMatchAtBoard()) check(false); } }, 400);
               }
@@ -345,14 +330,12 @@ jobs:
                   for(int cc=0;cc<COLS;cc++){ int write=ROWS-1; for(int r=ROWS-1;r>=0;r--) if(grid[r][cc]!=-1){ grid[write][cc]=grid[r][cc]; write--; } for(int r=write;r>=0;r--) grid[r][cc]=(int)(Math.random()*6); }
                   if(score>=target){
                     level++;
-                    // ===== BONUS NAIK LEVEL +2 DAN LEVEL 11+ TAMBAH +2 LAGI =====
                     int goSt=prefs.getInt("goStreak",0);
                     int base = calcBaseMoves(level);
                     int levelBonus = 2;
                     int extra11 = (level >= 11)? 2 : 0;
                     int bonusGO = goSt*2;
                     moves = base + levelBonus + extra11 + bonusGO;
-                    // =========================================
                     showLevelUp=true; levelUpTimer=0; score=0; target=calcTarget(level);
                     prefs.edit().putInt("goStreak",0).apply(); comboChain=0;
                   }
@@ -395,8 +378,8 @@ jobs:
                     canvas.drawRoundRect(rf,5,5,woodPlank); canvas.drawRoundRect(rf,5,5,woodBorder);
                     if(!isGameOver && r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),7,7,selGold);
                     if(!isGameOver && jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(110+(jackpotAnim%145)); jackpotAnim+=9; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),7,7,jack); }
-                    int setIdx=getJajanSetIndex();
-                    if(grid[r][cc]>=0 && grid[r][cc]<6 && jajanSets[setIdx][grid[r][cc]]!=null){ canvas.drawBitmap(jajanSets[setIdx][grid[r][cc]], null, new RectF(x+3,y+3,x+cellW-3,y+cellH-3), null); }
+                    Bitmap bmp=getJajanBmp(grid[r][cc]);
+                    if(grid[r][cc]>=0 && bmp!=null){ canvas.drawBitmap(bmp, null, new RectF(x+3,y+3,x+cellW-3,y+cellH-3), null); }
                   }
                   Paint pp=new Paint(Paint.ANTI_ALIAS_FLAG);
                   for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.45f; p.vx*=0.98f; p.alpha-=8; p.rot+=p.vr; if(p.alpha<=0) parts.remove(i); else { pp.setColor(p.col); pp.setAlpha((int)p.alpha); canvas.save(); canvas.translate(p.x,p.y); canvas.rotate(p.rot); canvas.drawCircle(0,0,p.r,pp); canvas.drawRect(-p.r,-p.r/2,p.r,p.r/2,pp); canvas.restore(); } }
@@ -443,8 +426,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 43
-                  versionName "V25-BONUS-LEVEL"
+                  versionCode 44
+                  versionName "V26-ROTATING-JAJAN"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -462,7 +445,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V25 BONUS" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V26" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -481,5 +464,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V25-BONUS-LEVEL
+          name: jajan-crush-V26-ROTATING-JAJAN
           path: app/build/outputs/apk/debug/app-debug.apk
