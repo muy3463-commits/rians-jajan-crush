@@ -139,6 +139,7 @@ jobs:
               int selR=-1, selC=-1;
               Bitmap[] allJajan=new Bitmap[12];
               Bitmap bg;
+              Paint bmpPaint;
               ArrayList<Particle> parts=new ArrayList<>();
               ArrayList<FloatText> floatTexts=new ArrayList<>();
               int levelUpTimer=0;
@@ -163,20 +164,21 @@ jobs:
                 if(allJajan[idx]!=null) return allJajan[idx];
                 return allJajan[type%12];
               }
-              Bitmap loadScaled(int resId){
+              Bitmap loadScaledHD(int resId){
                 try{
                   BitmapFactory.Options opts=new BitmapFactory.Options();
                   opts.inJustDecodeBounds=true;
                   BitmapFactory.decodeResource(getResources(), resId, opts);
                   int scale=1;
-                  int targetSize=128;
+                  int targetSize=512;
                   while(opts.outWidth/scale/2 >= targetSize && opts.outHeight/scale/2 >= targetSize) scale*=2;
                   opts.inJustDecodeBounds=false;
                   opts.inSampleSize=scale;
+                  opts.inPreferredConfig=Bitmap.Config.ARGB_8888;
                   Bitmap bmp=BitmapFactory.decodeResource(getResources(), resId, opts);
-                  if(bmp!=null && (bmp.getWidth()>targetSize || bmp.getHeight()>targetSize)){
-                    float ratio=Math.min((float)targetSize/bmp.getWidth(), (float)targetSize/bmp.getHeight());
-                    int nw=(int)(bmp.getWidth()*ratio);
+                  if(bmp!=null && bmp.getWidth()>targetSize){
+                    float ratio=(float)targetSize/bmp.getWidth();
+                    int nw=targetSize;
                     int nh=(int)(bmp.getHeight()*ratio);
                     Bitmap scaled=Bitmap.createScaledBitmap(bmp, nw, nh, true);
                     if(scaled!=bmp) bmp.recycle();
@@ -187,15 +189,19 @@ jobs:
               }
               public GameView(Context c){
                 super(c);
+                bmpPaint=new Paint(Paint.ANTI_ALIAS_FLAG);
+                bmpPaint.setFilterBitmap(true);
+                bmpPaint.setDither(true);
+                bmpPaint.setAntiAlias(true);
                 try{
                   int bgId=getResources().getIdentifier("bg_desa","drawable",getPackageName());
                   if(bgId!=0){
-                    BitmapFactory.Options o=new BitmapFactory.Options(); o.inSampleSize=2;
+                    BitmapFactory.Options o=new BitmapFactory.Options(); o.inSampleSize=1; o.inPreferredConfig=Bitmap.Config.ARGB_8888;
                     bg=BitmapFactory.decodeResource(getResources(),bgId,o);
                   }
                   for(int i=0;i<12;i++){
                     int id=getResources().getIdentifier("jajan"+String.format("%02d",i+1),"drawable",getPackageName());
-                    if(id!=0) allJajan[i]=loadScaled(id);
+                    if(id!=0) allJajan[i]=loadScaledHD(id);
                   }
                 }catch(Exception e){}
               }
@@ -382,7 +388,7 @@ jobs:
                     if(!isGameOver && r==selR && cc==selC) canvas.drawRoundRect(new RectF(x,y,x+cellW,y+cellH),7,7,selGold);
                     if(!isGameOver && jackpotReady && r==jackpotR && cc==jackpotC){ jack.setAlpha(110+(jackpotAnim%145)); jackpotAnim+=9; canvas.drawRoundRect(new RectF(x-1,y-1,x+cellW+1,y+cellH+1),7,7,jack); }
                     Bitmap bmp=getJajanBmp(grid[r][cc]);
-                    if(grid[r][cc]>=0 && bmp!=null){ canvas.drawBitmap(bmp, null, new RectF(x+3,y+3,x+cellW-3,y+cellH-3), null); }
+                    if(grid[r][cc]>=0 && bmp!=null){ canvas.drawBitmap(bmp, null, new RectF(x+2,y+2,x+cellW-2,y+cellH-2), bmpPaint); }
                   }
                   Paint pp=new Paint(Paint.ANTI_ALIAS_FLAG);
                   for(int i=parts.size()-1;i>=0;i--){ Particle p=parts.get(i); p.x+=p.vx; p.y+=p.vy; p.vy+=0.45f; p.vx*=0.98f; p.alpha-=8; p.rot+=p.vr; if(p.alpha<=0) parts.remove(i); else { pp.setColor(p.col); pp.setAlpha((int)p.alpha); canvas.save(); canvas.translate(p.x,p.y); canvas.rotate(p.rot); canvas.drawCircle(0,0,p.r,pp); canvas.restore(); } }
@@ -429,8 +435,8 @@ jobs:
                   applicationId "com.rians.jajancrush"
                   minSdk 21
                   targetSdk 34
-                  versionCode 47
-                  versionName "V29-ANTI-NGELAG"
+                  versionCode 49
+                  versionName "V31-HD512-JERNIH"
               }
               buildTypes { release { minifyEnabled false } }
           }
@@ -448,7 +454,7 @@ jobs:
           SET
           cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="Jajan Crush V29" android:icon="@mipmap/ic_launcher">
+            <application android:label="Jajan Crush V31 HD512" android:icon="@mipmap/ic_launcher">
               <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
@@ -467,5 +473,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: jajan-crush-V29-ANTI-NGELAG
+          name: jajan-crush-V31-HD512-JERNIH
           path: app/build/outputs/apk/debug/app-debug.apk
